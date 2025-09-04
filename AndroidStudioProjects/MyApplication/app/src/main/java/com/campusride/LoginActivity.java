@@ -30,9 +30,6 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        // Initialize Firebase Auth
-        FirebaseUtil.initialize(this);
-
         // Check if user is already logged in and email is verified
         FirebaseUser currentUser = FirebaseUtil.getAuth().getCurrentUser();
         if (currentUser != null && currentUser.isEmailVerified()) {
