@@ -202,6 +202,12 @@ public class LoginActivity extends AppCompatActivity {
                                 Toast.LENGTH_LONG).show();
                         }
                     }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Exception when sending password reset email to: " + email, e);
+                    Toast.makeText(LoginActivity.this, 
+                        "Exception when sending password reset email: " + e.getMessage(), 
+                        Toast.LENGTH_LONG).show();
                 });
     }
 }
