@@ -3,6 +3,7 @@ package com.campusride;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -20,6 +21,7 @@ import com.google.firebase.auth.FirebaseUser;
 
 public class LoginActivity extends AppCompatActivity {
 
+    private static final String TAG = "LoginActivity";
     private EditText emailEditText, passwordEditText;
     private Button loginButton, registerButton;
 
@@ -34,9 +36,12 @@ public class LoginActivity extends AppCompatActivity {
         // Check if user is already logged in and email is verified
         FirebaseUser currentUser = FirebaseUtil.getAuth().getCurrentUser();
         if (currentUser != null && currentUser.isEmailVerified()) {
+            Log.d(TAG, "User is already logged in and email is verified");
             startActivity(new Intent(LoginActivity.this, HomeActivity.class));
             finish();
             return;
+        } else if (currentUser != null) {
+            Log.d(TAG, "User is logged in but email is not verified");
         }
 
         initViews();
@@ -103,19 +108,22 @@ public class LoginActivity extends AppCompatActivity {
                         if (task.isSuccessful()) {
                             // Sign in success
                             FirebaseUser user = auth.getCurrentUser();
+                            Log.d(TAG, "Sign in successful for user: " + (user != null ? user.getUid() : "null"));
                             if (user != null && user.isEmailVerified()) {
+                                Log.d(TAG, "Email is verified, proceeding to home screen");
                                 Toast.makeText(LoginActivity.this, "Login successful", Toast.LENGTH_SHORT).show();
                                 startActivity(new Intent(LoginActivity.this, HomeActivity.class));
                                 finish();
                             } else {
-                                // Email not verified
-                                Toast.makeText(LoginActivity.this, "Please verify your email address before logging in.", Toast.LENGTH_LONG).show();
+                                Log.d(TAG, "Email is not verified, prompting user to verify");
+                                Toast.makeText(LoginActivity.this, "Please verify your email address before logging in. Check your spam/junk folder for the verification email.", Toast.LENGTH_LONG).show();
                                 auth.signOut(); // Sign out the user
                             }
                         } else {
+                            Log.e(TAG, "Login failed", task.getException());
                             // If sign in fails, display a message to the user.
                             Toast.makeText(LoginActivity.this, "Login failed: " + task.getException().getMessage(),
-                                    Toast.LENGTH_SHORT).show();
+                                    Toast.LENGTH_LONG).show();
                         }
                     }
                 });
