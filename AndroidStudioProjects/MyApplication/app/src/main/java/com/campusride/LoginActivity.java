@@ -9,14 +9,16 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.campusride.utils.FirebaseUtil;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
-public class LoginActivity extends BaseActivity {
+public class LoginActivity extends AppCompatActivity {
 
     private EditText emailEditText, passwordEditText;
     private Button loginButton, registerButton;
@@ -26,12 +28,12 @@ public class LoginActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        // Initialize Firebase
+        // Initialize Firebase Auth
         FirebaseUtil.initialize(this);
 
-        // Check if user is already logged in
+        // Check if user is already logged in and email is verified
         FirebaseUser currentUser = FirebaseUtil.getAuth().getCurrentUser();
-        if (currentUser != null) {
+        if (currentUser != null && currentUser.isEmailVerified()) {
             startActivity(new Intent(LoginActivity.this, HomeActivity.class));
             finish();
             return;
@@ -93,16 +95,23 @@ public class LoginActivity extends BaseActivity {
         }
 
         // Sign in with Firebase
-        FirebaseUtil.getAuth().signInWithEmailAndPassword(email, password)
+        FirebaseAuth auth = FirebaseUtil.getAuth();
+        auth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
                             // Sign in success
-                            FirebaseUser user = FirebaseUtil.getAuth().getCurrentUser();
-                            Toast.makeText(LoginActivity.this, "Login successful", Toast.LENGTH_SHORT).show();
-                            startActivity(new Intent(LoginActivity.this, HomeActivity.class));
-                            finish();
+                            FirebaseUser user = auth.getCurrentUser();
+                            if (user != null && user.isEmailVerified()) {
+                                Toast.makeText(LoginActivity.this, "Login successful", Toast.LENGTH_SHORT).show();
+                                startActivity(new Intent(LoginActivity.this, HomeActivity.class));
+                                finish();
+                            } else {
+                                // Email not verified
+                                Toast.makeText(LoginActivity.this, "Please verify your email address before logging in.", Toast.LENGTH_LONG).show();
+                                auth.signOut(); // Sign out the user
+                            }
                         } else {
                             // If sign in fails, display a message to the user.
                             Toast.makeText(LoginActivity.this, "Login failed: " + task.getException().getMessage(),
@@ -140,23 +149,10 @@ public class LoginActivity extends BaseActivity {
             return;
         }
 
-        // Create user with Firebase
-        FirebaseUtil.getAuth().createUserWithEmailAndPassword(email, password)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (task.isSuccessful()) {
-                            // Sign up success
-                            FirebaseUser user = FirebaseUtil.getAuth().getCurrentUser();
-                            Toast.makeText(LoginActivity.this, "Registration successful", Toast.LENGTH_SHORT).show();
-                            startActivity(new Intent(LoginActivity.this, HomeActivity.class));
-                            finish();
-                        } else {
-                            // If sign up fails, display a message to the user.
-                            Toast.makeText(LoginActivity.this, "Registration failed: " + task.getException().getMessage(),
-                                    Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                });
+        // Instead of directly creating user, redirect to OTP verification activity
+        Intent intent = new Intent(LoginActivity.this, OTPVerificationActivity.class);
+        intent.putExtra("email", email);
+        intent.putExtra("password", password);
+        startActivity(intent);
     }
 }
