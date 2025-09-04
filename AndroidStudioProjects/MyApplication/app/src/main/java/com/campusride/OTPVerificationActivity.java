@@ -15,6 +15,8 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.campusride.utils.FirebaseUtil;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
@@ -102,24 +104,30 @@ public class OTPVerificationActivity extends AppCompatActivity {
     
     private void sendEmailVerification(FirebaseUser user) {
         user.sendEmailVerification()
-                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
-                    public void onComplete(@NonNull Task<Void> emailTask) {
+                    public void onSuccess(Void aVoid) {
                         progressBar.setVisibility(View.GONE);
-                        if (emailTask.isSuccessful()) {
-                            Log.d(TAG, "Verification email sent to: " + user.getEmail());
-                            Toast.makeText(OTPVerificationActivity.this, 
-                                "Registration successful. Please check your email for verification. Check your spam/junk folder if you don't see it.", 
-                                Toast.LENGTH_LONG).show();
-                            // Redirect to login page
-                            startActivity(new Intent(OTPVerificationActivity.this, LoginActivity.class));
-                            finish();
-                        } else {
-                            Log.e(TAG, "Failed to send verification email", emailTask.getException());
-                            Toast.makeText(OTPVerificationActivity.this, 
-                                "Failed to send verification email. Please check the app logs for more details.", 
-                                Toast.LENGTH_LONG).show();
-                        }
+                        Log.d(TAG, "Verification email sent successfully to: " + user.getEmail());
+                        Toast.makeText(OTPVerificationActivity.this, 
+                            "Registration successful. Please check your email (" + user.getEmail() + ") for verification. " +
+                            "Check your spam/junk folder if you don't see it within a few minutes.", 
+                            Toast.LENGTH_LONG).show();
+                        // Redirect to login page
+                        startActivity(new Intent(OTPVerificationActivity.this, LoginActivity.class));
+                        finish();
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        progressBar.setVisibility(View.GONE);
+                        Log.e(TAG, "Failed to send verification email to: " + user.getEmail(), e);
+                        Toast.makeText(OTPVerificationActivity.this, 
+                            "Failed to send verification email to " + user.getEmail() + 
+                            ". Error: " + e.getMessage() + 
+                            ". Please check the app logs for more details.", 
+                            Toast.LENGTH_LONG).show();
                     }
                 });
     }
