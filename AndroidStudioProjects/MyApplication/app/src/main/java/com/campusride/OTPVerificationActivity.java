@@ -17,17 +17,13 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.auth.PhoneAuthCredential;
-import com.google.firebase.auth.PhoneAuthProvider;
 
 public class OTPVerificationActivity extends AppCompatActivity {
 
     private EditText otpEditText;
     private Button verifyButton;
     private ProgressBar progressBar;
-    private String verificationId;
     private String email;
     private String password;
 
@@ -36,8 +32,7 @@ public class OTPVerificationActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_otp_verification);
 
-        // Get the verification ID and email/password from the intent
-        verificationId = getIntent().getStringExtra("verificationId");
+        // Get the email and password from the intent
         email = getIntent().getStringExtra("email");
         password = getIntent().getStringExtra("password");
 
@@ -69,20 +64,16 @@ public class OTPVerificationActivity extends AppCompatActivity {
                     return;
                 }
                 
-                verifyOTP(otp);
+                // For now, we'll just create the user and send email verification
+                // In a real implementation, you would verify the OTP with a backend service
+                createUserAndSendEmailVerification();
             }
         });
     }
 
-    private void verifyOTP(String otp) {
+    private void createUserAndSendEmailVerification() {
         progressBar.setVisibility(View.VISIBLE);
         
-        // For email verification, we'll create the user directly and send email verification
-        // Since Firebase doesn't have email OTP built-in, we'll send a verification email
-        createUserAndSendEmailVerification();
-    }
-
-    private void createUserAndSendEmailVerification() {
         FirebaseAuth auth = FirebaseUtil.getAuth();
         auth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {

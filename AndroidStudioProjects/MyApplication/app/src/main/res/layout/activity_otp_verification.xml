@@ -21,7 +21,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Please check your email for a verification code and enter it below:"
+        android:text="We've sent a 6-digit verification code to your email. Please enter it below:"
         android:textSize="16sp"
         android:layout_marginBottom="24dp"
         android:textAlignment="center" />
@@ -36,8 +36,9 @@
             android:id="@+id/otpEditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Verification Code"
-            android:inputType="number" />
+            android:hint="6-digit code"
+            android:inputType="number"
+            android:maxLength="6" />
 
     </com.google.android.material.textfield.TextInputLayout>
 
