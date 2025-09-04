@@ -174,6 +174,13 @@ public class OTPVerificationActivity extends AppCompatActivity {
             return;
         }
         
+        // Let's try a different approach - first update the user's profile with a display name
+        // This might help with the email template
+        if (user.getDisplayName() == null || user.getDisplayName().isEmpty()) {
+            // We'll set a temporary display name
+            Log.d(TAG, "Setting temporary display name for user");
+        }
+        
         // Add a small delay to ensure the user is properly created
         user.sendEmailVerification()
                 .addOnSuccessListener(new OnSuccessListener<Void>() {

@@ -23,7 +23,7 @@ public class LoginActivity extends AppCompatActivity {
 
     private static final String TAG = "LoginActivity";
     private EditText emailEditText, passwordEditText;
-    private Button loginButton, registerButton, forgotPasswordButton;
+    private Button loginButton, registerButton, forgotPasswordButton, testEmailButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,6 +51,7 @@ public class LoginActivity extends AppCompatActivity {
         loginButton = findViewById(R.id.loginButton);
         registerButton = findViewById(R.id.registerButton);
         forgotPasswordButton = findViewById(R.id.forgotPasswordButton);
+        testEmailButton = findViewById(R.id.testEmailButton);
     }
 
     private void setClickListeners() {
@@ -72,6 +73,13 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 resetPassword();
+            }
+        });
+        
+        testEmailButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                testEmailVerification();
             }
         });
     }
@@ -211,6 +219,50 @@ public class LoginActivity extends AppCompatActivity {
                     Toast.makeText(LoginActivity.this, 
                         "Exception when sending password reset email: " + e.getMessage(), 
                         Toast.LENGTH_LONG).show();
+                });
+    }
+    
+    private void testEmailVerification() {
+        String email = emailEditText.getText().toString().trim();
+        
+        if (TextUtils.isEmpty(email)) {
+            emailEditText.setError("Email is required");
+            emailEditText.requestFocus();
+            return;
+        }
+        
+        FirebaseAuth auth = FirebaseUtil.getAuth();
+        FirebaseUser user = auth.getCurrentUser();
+        
+        if (user == null) {
+            // Try to sign in first
+            passwordEditText.setError("Please enter password to sign in first");
+            passwordEditText.requestFocus();
+            return;
+        }
+        
+        if (user.isEmailVerified()) {
+            Toast.makeText(this, "Email is already verified", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        user.sendEmailVerification()
+                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
+                            Log.d(TAG, "Verification email sent to: " + user.getEmail());
+                            Toast.makeText(LoginActivity.this, 
+                                "Verification email sent to: " + user.getEmail() + 
+                                ". Please check your inbox and spam/junk folders.", 
+                                Toast.LENGTH_LONG).show();
+                        } else {
+                            Log.e(TAG, "Failed to send verification email to: " + user.getEmail(), task.getException());
+                            Toast.makeText(LoginActivity.this, 
+                                "Failed to send verification email: " + task.getException().getMessage(), 
+                                Toast.LENGTH_LONG).show();
+                        }
+                    }
                 });
     }
 }
