@@ -236,11 +236,37 @@ public class LoginActivity extends AppCompatActivity {
         
         if (user == null) {
             // Try to sign in first
-            passwordEditText.setError("Please enter password to sign in first");
-            passwordEditText.requestFocus();
-            return;
+            String password = passwordEditText.getText().toString().trim();
+            if (TextUtils.isEmpty(password)) {
+                passwordEditText.setError("Please enter password to sign in first");
+                passwordEditText.requestFocus();
+                return;
+            }
+            
+            auth.signInWithEmailAndPassword(email, password)
+                    .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+                        @Override
+                        public void onComplete(@NonNull Task<AuthResult> task) {
+                            if (task.isSuccessful()) {
+                                FirebaseUser signedInUser = auth.getCurrentUser();
+                                if (signedInUser != null) {
+                                    sendTestVerificationEmail(signedInUser);
+                                } else {
+                                    Toast.makeText(LoginActivity.this, "Failed to sign in user", Toast.LENGTH_SHORT).show();
+                                }
+                            } else {
+                                Toast.makeText(LoginActivity.this, 
+                                    "Sign in failed: " + task.getException().getMessage(), 
+                                    Toast.LENGTH_LONG).show();
+                            }
+                        }
+                    });
+        } else {
+            sendTestVerificationEmail(user);
         }
-        
+    }
+    
+    private void sendTestVerificationEmail(FirebaseUser user) {
         if (user.isEmailVerified()) {
             Toast.makeText(this, "Email is already verified", Toast.LENGTH_SHORT).show();
             return;

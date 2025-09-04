@@ -3,7 +3,6 @@ package com.campusride;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -193,7 +192,7 @@ public class OTPVerificationActivity extends AppCompatActivity {
                         Toast.makeText(OTPVerificationActivity.this, 
                             "Registration successful! Verification email sent to: " + user.getEmail() + 
                             ". Please check your inbox and spam/junk folders. " +
-                            "If you don't receive the email, click 'Resend Verification Email'.", 
+                            "Click the verification link in the email, then click 'Verify Email' below.", 
                             Toast.LENGTH_LONG).show();
                     }
                 })
@@ -250,6 +249,7 @@ public class OTPVerificationActivity extends AppCompatActivity {
             public void onComplete(@NonNull Task<Void> task) {
                 progressBar.setVisibility(View.GONE);
                 if (task.isSuccessful()) {
+                    Log.d(TAG, "User reload successful. Email verified: " + currentUser.isEmailVerified());
                     if (currentUser.isEmailVerified()) {
                         Toast.makeText(OTPVerificationActivity.this, 
                             "Email verified successfully! You can now log in.", 
@@ -264,7 +264,8 @@ public class OTPVerificationActivity extends AppCompatActivity {
                         }, 2000);
                     } else {
                         Toast.makeText(OTPVerificationActivity.this, 
-                            "Email not yet verified. Please check your email and click the verification link.", 
+                            "Email not yet verified. Please check your email and click the verification link. " +
+                            "After clicking the link, click this button again to check verification status.", 
                             Toast.LENGTH_LONG).show();
                     }
                 } else {
