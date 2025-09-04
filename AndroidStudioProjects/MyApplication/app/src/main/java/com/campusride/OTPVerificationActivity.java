@@ -174,12 +174,10 @@ public class OTPVerificationActivity extends AppCompatActivity {
             return;
         }
         
-        // Let's try a different approach - first update the user's profile with a display name
-        // This might help with the email template
-        if (user.getDisplayName() == null || user.getDisplayName().isEmpty()) {
-            // We'll set a temporary display name
-            Log.d(TAG, "Setting temporary display name for user");
-        }
+        // Let's add some additional checks
+        Log.d(TAG, "User email: " + user.getEmail());
+        Log.d(TAG, "User display name: " + user.getDisplayName());
+        Log.d(TAG, "User is email verified: " + user.isEmailVerified());
         
         // Add a small delay to ensure the user is properly created
         user.sendEmailVerification()
@@ -207,10 +205,13 @@ public class OTPVerificationActivity extends AppCompatActivity {
                         String errorMessage = "Failed to send verification email";
                         if (e instanceof FirebaseAuthActionCodeException) {
                             errorMessage = "Email action code error: " + e.getMessage();
+                            Log.e(TAG, "Action code error details:", e);
                         } else if (e instanceof FirebaseAuthException) {
                             errorMessage = "Firebase authentication error: " + e.getMessage();
+                            Log.e(TAG, "Firebase auth error details:", e);
                         } else {
                             errorMessage = "Failed to send verification email: " + e.getMessage();
+                            Log.e(TAG, "General error details:", e);
                         }
                         
                         // Log the full stack trace for debugging
