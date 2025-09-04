@@ -103,7 +103,22 @@ public class OTPVerificationActivity extends AppCompatActivity {
                             FirebaseUser user = auth.getCurrentUser();
                             if (user != null) {
                                 Log.d(TAG, "User created successfully: " + user.getUid() + " with email: " + user.getEmail());
-                                sendEmailVerification(user);
+                                // Reload the user to ensure we have the latest data
+                                user.reload().addOnCompleteListener(new OnCompleteListener<Void>() {
+                                    @Override
+                                    public void onComplete(@NonNull Task<Void> reloadTask) {
+                                        if (reloadTask.isSuccessful()) {
+                                            Log.d(TAG, "User reloaded successfully");
+                                            sendEmailVerification(user);
+                                        } else {
+                                            Log.e(TAG, "Failed to reload user", reloadTask.getException());
+                                            progressBar.setVisibility(View.GONE);
+                                            Toast.makeText(OTPVerificationActivity.this, 
+                                                "Failed to reload user: " + reloadTask.getException().getMessage(), 
+                                                Toast.LENGTH_LONG).show();
+                                        }
+                                    }
+                                });
                             } else {
                                 Log.e(TAG, "User is null after successful creation");
                                 progressBar.setVisibility(View.GONE);
@@ -130,6 +145,16 @@ public class OTPVerificationActivity extends AppCompatActivity {
                             Toast.makeText(OTPVerificationActivity.this, errorMessage, Toast.LENGTH_LONG).show();
                         }
                     }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        progressBar.setVisibility(View.GONE);
+                        Log.e(TAG, "Registration failed with exception", e);
+                        Toast.makeText(OTPVerificationActivity.this, 
+                            "Registration failed: " + e.getMessage(), 
+                            Toast.LENGTH_LONG).show();
+                    }
                 });
     }
     
@@ -149,6 +174,7 @@ public class OTPVerificationActivity extends AppCompatActivity {
             return;
         }
         
+        // Add a small delay to ensure the user is properly created
         user.sendEmailVerification()
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
@@ -193,6 +219,8 @@ public class OTPVerificationActivity extends AppCompatActivity {
                     public void onComplete(@NonNull Task<Void> task) {
                         if (!task.isSuccessful()) {
                             Log.e(TAG, "Email verification task completed with failure", task.getException());
+                        } else {
+                            Log.d(TAG, "Email verification task completed successfully");
                         }
                     }
                 });
