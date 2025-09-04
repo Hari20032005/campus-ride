@@ -86,11 +86,12 @@ public class LoginActivity extends AppCompatActivity {
             return;
         }
 
-        if (!email.endsWith("@vitstudent.ac.in")) {
-            emailEditText.setError("Please use your college email (@vitstudent.ac.in)");
-            emailEditText.requestFocus();
-            return;
-        }
+        // Removed the college email restriction
+        // if (!email.endsWith("@vitstudent.ac.in")) {
+        //     emailEditText.setError("Please use your college email (@vitstudent.ac.in)");
+        //     emailEditText.requestFocus();
+        //     return;
+        // }
 
         if (TextUtils.isEmpty(password)) {
             passwordEditText.setError("Password is required");
@@ -144,11 +145,12 @@ public class LoginActivity extends AppCompatActivity {
             return;
         }
 
-        if (!email.endsWith("@vitstudent.ac.in")) {
-            emailEditText.setError("Please use your college email (@vitstudent.ac.in)");
-            emailEditText.requestFocus();
-            return;
-        }
+        // Removed the college email restriction
+        // if (!email.endsWith("@vitstudent.ac.in")) {
+        //     emailEditText.setError("Please use your college email (@vitstudent.ac.in)");
+        //     emailEditText.requestFocus();
+        //     return;
+        // }
 
         if (TextUtils.isEmpty(password)) {
             passwordEditText.setError("Password is required");
@@ -178,11 +180,12 @@ public class LoginActivity extends AppCompatActivity {
             return;
         }
         
-        if (!email.endsWith("@vitstudent.ac.in")) {
-            emailEditText.setError("Please use your college email (@vitstudent.ac.in)");
-            emailEditText.requestFocus();
-            return;
-        }
+        // Removed the college email restriction
+        // if (!email.endsWith("@vitstudent.ac.in")) {
+        //     emailEditText.setError("Please use your college email (@vitstudent.ac.in)");
+        //     emailEditText.requestFocus();
+        //     return;
+        // }
         
         FirebaseAuth auth = FirebaseUtil.getAuth();
         auth.sendPasswordResetEmail(email)

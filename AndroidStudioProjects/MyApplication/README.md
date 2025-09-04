@@ -6,7 +6,7 @@ Campus Ride is a ride-sharing application designed for college students to easil
 ## Features
 1. **Login/Register Page**
    - Firebase Authentication (Email + Password login)
-   - Restrict sign-up with college email domain (@vitstudent.ac.in)
+   - Accept any valid email address for registration
 
 2. **Home Dashboard**
    - Navigation options: Post a Ride, Search Ride, Ride Requests, My Ride Requests, Profile
