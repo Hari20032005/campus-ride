@@ -23,7 +23,7 @@ public class LoginActivity extends AppCompatActivity {
 
     private static final String TAG = "LoginActivity";
     private EditText emailEditText, passwordEditText;
-    private Button loginButton, registerButton;
+    private Button loginButton, registerButton, forgotPasswordButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,6 +50,7 @@ public class LoginActivity extends AppCompatActivity {
         passwordEditText = findViewById(R.id.passwordEditText);
         loginButton = findViewById(R.id.loginButton);
         registerButton = findViewById(R.id.registerButton);
+        forgotPasswordButton = findViewById(R.id.forgotPasswordButton);
     }
 
     private void setClickListeners() {
@@ -64,6 +65,13 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 registerUser();
+            }
+        });
+        
+        forgotPasswordButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                resetPassword();
             }
         });
     }
@@ -159,5 +167,41 @@ public class LoginActivity extends AppCompatActivity {
         intent.putExtra("email", email);
         intent.putExtra("password", password);
         startActivity(intent);
+    }
+    
+    private void resetPassword() {
+        String email = emailEditText.getText().toString().trim();
+        
+        if (TextUtils.isEmpty(email)) {
+            emailEditText.setError("Email is required");
+            emailEditText.requestFocus();
+            return;
+        }
+        
+        if (!email.endsWith("@vitstudent.ac.in")) {
+            emailEditText.setError("Please use your college email (@vitstudent.ac.in)");
+            emailEditText.requestFocus();
+            return;
+        }
+        
+        FirebaseAuth auth = FirebaseUtil.getAuth();
+        auth.sendPasswordResetEmail(email)
+                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
+                            Log.d(TAG, "Password reset email sent to: " + email);
+                            Toast.makeText(LoginActivity.this, 
+                                "Password reset email sent to: " + email + 
+                                ". Please check your inbox and spam/junk folders.", 
+                                Toast.LENGTH_LONG).show();
+                        } else {
+                            Log.e(TAG, "Failed to send password reset email to: " + email, task.getException());
+                            Toast.makeText(LoginActivity.this, 
+                                "Failed to send password reset email: " + task.getException().getMessage(), 
+                                Toast.LENGTH_LONG).show();
+                        }
+                    }
+                });
     }
 }
