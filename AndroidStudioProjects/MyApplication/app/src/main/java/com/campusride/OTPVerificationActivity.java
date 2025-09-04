@@ -44,6 +44,15 @@ public class OTPVerificationActivity extends AppCompatActivity {
         password = getIntent().getStringExtra("password");
         
         Log.d(TAG, "Starting OTP verification for email: " + email);
+        
+        // Check if Firebase is properly initialized
+        FirebaseAuth auth = FirebaseUtil.getAuth();
+        if (auth == null) {
+            Log.e(TAG, "FirebaseAuth is null - Firebase not properly initialized");
+            Toast.makeText(this, "Firebase not properly initialized", Toast.LENGTH_LONG).show();
+            finish();
+            return;
+        }
 
         initViews();
         setClickListeners();
