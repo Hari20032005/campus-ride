@@ -2,6 +2,7 @@ package com.campusride;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
@@ -30,9 +31,11 @@ public class OTPVerificationActivity extends AppCompatActivity {
     private static final String TAG = "OTPVerification";
     private EditText otpEditText;
     private Button verifyButton;
+    private Button resendEmailButton;
     private ProgressBar progressBar;
     private String email;
     private String password;
+    private FirebaseUser currentUser;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,11 +59,15 @@ public class OTPVerificationActivity extends AppCompatActivity {
 
         initViews();
         setClickListeners();
+        
+        // Create user and send verification email
+        createUserAndSendEmailVerification();
     }
 
     private void initViews() {
         otpEditText = findViewById(R.id.otpEditText);
         verifyButton = findViewById(R.id.verifyButton);
+        resendEmailButton = findViewById(R.id.resendEmailButton);
         progressBar = findViewById(R.id.progressBar);
     }
 
@@ -68,23 +75,14 @@ public class OTPVerificationActivity extends AppCompatActivity {
         verifyButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String otp = otpEditText.getText().toString().trim();
-                
-                if (TextUtils.isEmpty(otp)) {
-                    otpEditText.setError("OTP is required");
-                    otpEditText.requestFocus();
-                    return;
-                }
-                
-                if (otp.length() != 6) {
-                    otpEditText.setError("OTP must be 6 digits");
-                    otpEditText.requestFocus();
-                    return;
-                }
-                
-                // For now, we'll just create the user and send email verification
-                // In a real implementation, you would verify the OTP with a backend service
-                createUserAndSendEmailVerification();
+                checkEmailVerification();
+            }
+        });
+        
+        resendEmailButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                resendVerificationEmail();
             }
         });
     }
@@ -102,6 +100,7 @@ public class OTPVerificationActivity extends AppCompatActivity {
                             // Sign up success, send verification email
                             FirebaseUser user = auth.getCurrentUser();
                             if (user != null) {
+                                currentUser = user;
                                 Log.d(TAG, "User created successfully: " + user.getUid() + " with email: " + user.getEmail());
                                 // Reload the user to ensure we have the latest data
                                 user.reload().addOnCompleteListener(new OnCompleteListener<Void>() {
@@ -168,9 +167,14 @@ public class OTPVerificationActivity extends AppCompatActivity {
             Toast.makeText(OTPVerificationActivity.this, 
                 "Your email is already verified. You can now log in.", 
                 Toast.LENGTH_LONG).show();
-            // Redirect to login page
-            startActivity(new Intent(OTPVerificationActivity.this, LoginActivity.class));
-            finish();
+            // Redirect to login page after a short delay
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    startActivity(new Intent(OTPVerificationActivity.this, LoginActivity.class));
+                    finish();
+                }
+            }, 2000);
             return;
         }
         
@@ -188,11 +192,9 @@ public class OTPVerificationActivity extends AppCompatActivity {
                         Log.d(TAG, "Verification email sent successfully to: " + user.getEmail());
                         Toast.makeText(OTPVerificationActivity.this, 
                             "Registration successful! Verification email sent to: " + user.getEmail() + 
-                            ". Please check your inbox and spam/junk folders.", 
+                            ". Please check your inbox and spam/junk folders. " +
+                            "If you don't receive the email, click 'Resend Verification Email'.", 
                             Toast.LENGTH_LONG).show();
-                        // Redirect to login page
-                        startActivity(new Intent(OTPVerificationActivity.this, LoginActivity.class));
-                        finish();
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
@@ -230,6 +232,78 @@ public class OTPVerificationActivity extends AppCompatActivity {
                         } else {
                             Log.d(TAG, "Email verification task completed successfully");
                         }
+                    }
+                });
+    }
+    
+    private void checkEmailVerification() {
+        if (currentUser == null) {
+            Toast.makeText(this, "No user to verify", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        progressBar.setVisibility(View.VISIBLE);
+        
+        // Reload the user to get the latest email verification status
+        currentUser.reload().addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                progressBar.setVisibility(View.GONE);
+                if (task.isSuccessful()) {
+                    if (currentUser.isEmailVerified()) {
+                        Toast.makeText(OTPVerificationActivity.this, 
+                            "Email verified successfully! You can now log in.", 
+                            Toast.LENGTH_LONG).show();
+                        // Redirect to login page after a short delay
+                        new Handler().postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                startActivity(new Intent(OTPVerificationActivity.this, LoginActivity.class));
+                                finish();
+                            }
+                        }, 2000);
+                    } else {
+                        Toast.makeText(OTPVerificationActivity.this, 
+                            "Email not yet verified. Please check your email and click the verification link.", 
+                            Toast.LENGTH_LONG).show();
+                    }
+                } else {
+                    Log.e(TAG, "Failed to reload user", task.getException());
+                    Toast.makeText(OTPVerificationActivity.this, 
+                        "Failed to check verification status: " + task.getException().getMessage(), 
+                        Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+    }
+    
+    private void resendVerificationEmail() {
+        if (currentUser == null) {
+            Toast.makeText(this, "No user to send email to", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        progressBar.setVisibility(View.VISIBLE);
+        
+        currentUser.sendEmailVerification()
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        progressBar.setVisibility(View.GONE);
+                        Toast.makeText(OTPVerificationActivity.this, 
+                            "Verification email resent to: " + currentUser.getEmail() + 
+                            ". Please check your inbox and spam/junk folders.", 
+                            Toast.LENGTH_LONG).show();
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        progressBar.setVisibility(View.GONE);
+                        Log.e(TAG, "Failed to resend verification email to: " + currentUser.getEmail(), e);
+                        Toast.makeText(OTPVerificationActivity.this, 
+                            "Failed to resend verification email: " + e.getMessage(), 
+                            Toast.LENGTH_LONG).show();
                     }
                 });
     }

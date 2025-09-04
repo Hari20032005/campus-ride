@@ -21,7 +21,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="We've sent a 6-digit verification code to your email. Please enter it below:"
+        android:text="We've sent a verification email to your inbox. Please check your email and click the verification link, or enter the 6-digit code below:"
         android:textSize="16sp"
         android:layout_marginBottom="24dp"
         android:textAlignment="center" />
@@ -49,6 +49,14 @@
         android:text="Verify Email"
         android:layout_marginBottom="16dp"
         style="@style/Widget.MaterialComponents.Button" />
+        
+    <Button
+        android:id="@+id/resendEmailButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Resend Verification Email"
+        android:layout_marginBottom="16dp"
+        style="@style/Widget.MaterialComponents.Button.TextButton" />
 
     <ProgressBar
         android:id="@+id/progressBar"
