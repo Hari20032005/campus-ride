@@ -20,6 +20,9 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthActionCodeException;
+import com.google.firebase.auth.FirebaseAuthEmailException;
+import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseUser;
 
 public class OTPVerificationActivity extends AppCompatActivity {
@@ -39,6 +42,8 @@ public class OTPVerificationActivity extends AppCompatActivity {
         // Get the email and password from the intent
         email = getIntent().getStringExtra("email");
         password = getIntent().getStringExtra("password");
+        
+        Log.d(TAG, "Starting OTP verification for email: " + email);
 
         initViews();
         setClickListeners();
@@ -76,6 +81,7 @@ public class OTPVerificationActivity extends AppCompatActivity {
     }
 
     private void createUserAndSendEmailVerification() {
+        Log.d(TAG, "Attempting to create user with email: " + email);
         progressBar.setVisibility(View.VISIBLE);
         
         FirebaseAuth auth = FirebaseUtil.getAuth();
@@ -87,22 +93,39 @@ public class OTPVerificationActivity extends AppCompatActivity {
                             // Sign up success, send verification email
                             FirebaseUser user = auth.getCurrentUser();
                             if (user != null) {
-                                Log.d(TAG, "User created successfully: " + user.getUid());
+                                Log.d(TAG, "User created successfully: " + user.getUid() + " with email: " + user.getEmail());
                                 sendEmailVerification(user);
+                            } else {
+                                Log.e(TAG, "User is null after successful creation");
+                                progressBar.setVisibility(View.GONE);
+                                Toast.makeText(OTPVerificationActivity.this, 
+                                    "Unexpected error: User is null after creation", 
+                                    Toast.LENGTH_LONG).show();
                             }
                         } else {
                             progressBar.setVisibility(View.GONE);
                             Log.e(TAG, "Registration failed", task.getException());
-                            // If sign up fails, display a message to the user.
-                            Toast.makeText(OTPVerificationActivity.this, 
-                                "Registration failed: " + task.getException().getMessage(),
-                                Toast.LENGTH_LONG).show();
+                            
+                            // Provide more specific error messages
+                            String errorMessage = "Registration failed";
+                            if (task.getException() != null) {
+                                if (task.getException() instanceof FirebaseAuthEmailException) {
+                                    errorMessage = "Email error: " + task.getException().getMessage();
+                                } else if (task.getException() instanceof FirebaseAuthException) {
+                                    errorMessage = "Authentication error: " + task.getException().getMessage();
+                                } else {
+                                    errorMessage = "Registration failed: " + task.getException().getMessage();
+                                }
+                            }
+                            
+                            Toast.makeText(OTPVerificationActivity.this, errorMessage, Toast.LENGTH_LONG).show();
                         }
                     }
                 });
     }
     
     private void sendEmailVerification(FirebaseUser user) {
+        Log.d(TAG, "Attempting to send verification email to: " + user.getEmail());
         user.sendEmailVerification()
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
@@ -110,8 +133,8 @@ public class OTPVerificationActivity extends AppCompatActivity {
                         progressBar.setVisibility(View.GONE);
                         Log.d(TAG, "Verification email sent successfully to: " + user.getEmail());
                         Toast.makeText(OTPVerificationActivity.this, 
-                            "Registration successful. Please check your email (" + user.getEmail() + ") for verification. " +
-                            "Check your spam/junk folder if you don't see it within a few minutes.", 
+                            "Registration successful! Verification email sent to: " + user.getEmail() + 
+                            ". Please check your inbox and spam/junk folders.", 
                             Toast.LENGTH_LONG).show();
                         // Redirect to login page
                         startActivity(new Intent(OTPVerificationActivity.this, LoginActivity.class));
@@ -123,10 +146,18 @@ public class OTPVerificationActivity extends AppCompatActivity {
                     public void onFailure(@NonNull Exception e) {
                         progressBar.setVisibility(View.GONE);
                         Log.e(TAG, "Failed to send verification email to: " + user.getEmail(), e);
+                        
+                        String errorMessage = "Failed to send verification email";
+                        if (e instanceof FirebaseAuthActionCodeException) {
+                            errorMessage = "Email action code error: " + e.getMessage();
+                        } else if (e instanceof FirebaseAuthException) {
+                            errorMessage = "Firebase authentication error: " + e.getMessage();
+                        } else {
+                            errorMessage = "Failed to send verification email: " + e.getMessage();
+                        }
+                        
                         Toast.makeText(OTPVerificationActivity.this, 
-                            "Failed to send verification email to " + user.getEmail() + 
-                            ". Error: " + e.getMessage() + 
-                            ". Please check the app logs for more details.", 
+                            errorMessage, 
                             Toast.LENGTH_LONG).show();
                     }
                 });
