@@ -30,15 +30,13 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        // Check if user is already logged in and email is verified
+        // Check if user is already logged in
         FirebaseUser currentUser = FirebaseUtil.getAuth().getCurrentUser();
-        if (currentUser != null && currentUser.isEmailVerified()) {
-            Log.d(TAG, "User is already logged in and email is verified");
+        if (currentUser != null) {
+            Log.d(TAG, "User is already logged in");
             startActivity(new Intent(LoginActivity.this, HomeActivity.class));
             finish();
             return;
-        } else if (currentUser != null) {
-            Log.d(TAG, "User is logged in but email is not verified");
         }
 
         initViews();
@@ -123,15 +121,11 @@ public class LoginActivity extends AppCompatActivity {
                             // Sign in success
                             FirebaseUser user = auth.getCurrentUser();
                             Log.d(TAG, "Sign in successful for user: " + (user != null ? user.getUid() : "null"));
-                            if (user != null && user.isEmailVerified()) {
-                                Log.d(TAG, "Email is verified, proceeding to home screen");
+                            if (user != null) {
+                                Log.d(TAG, "Proceeding to home screen");
                                 Toast.makeText(LoginActivity.this, "Login successful", Toast.LENGTH_SHORT).show();
                                 startActivity(new Intent(LoginActivity.this, HomeActivity.class));
                                 finish();
-                            } else {
-                                Log.d(TAG, "Email is not verified, prompting user to verify");
-                                Toast.makeText(LoginActivity.this, "Please verify your email address before logging in. Check your spam/junk folder for the verification email.", Toast.LENGTH_LONG).show();
-                                auth.signOut(); // Sign out the user
                             }
                         } else {
                             Log.e(TAG, "Login failed", task.getException());

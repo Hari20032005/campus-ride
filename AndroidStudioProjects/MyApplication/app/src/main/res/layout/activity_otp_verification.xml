@@ -12,7 +12,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Email Verification"
+        android:text="Account Created Successfully"
         android:textSize="24sp"
         android:textStyle="bold"
         android:layout_marginBottom="16dp"
@@ -21,42 +21,18 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="We've sent a verification email to your inbox. Please check your email and click the verification link, or enter the 6-digit code below:"
+        android:text="Your account has been created successfully. You can now log in to the app."
         android:textSize="16sp"
         android:layout_marginBottom="24dp"
         android:textAlignment="center" />
 
-    <com.google.android.material.textfield.TextInputLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/otpEditText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="6-digit code"
-            android:inputType="number"
-            android:maxLength="6" />
-
-    </com.google.android.material.textfield.TextInputLayout>
-
     <Button
-        android:id="@+id/verifyButton"
+        android:id="@+id/loginButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Verify Email"
+        android:text="Go to Login"
         android:layout_marginBottom="16dp"
         style="@style/Widget.MaterialComponents.Button" />
-        
-    <Button
-        android:id="@+id/resendEmailButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Resend Verification Email"
-        android:layout_marginBottom="16dp"
-        style="@style/Widget.MaterialComponents.Button.TextButton" />
 
     <ProgressBar
         android:id="@+id/progressBar"
