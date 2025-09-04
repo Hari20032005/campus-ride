@@ -135,6 +135,20 @@ public class OTPVerificationActivity extends AppCompatActivity {
     
     private void sendEmailVerification(FirebaseUser user) {
         Log.d(TAG, "Attempting to send verification email to: " + user.getEmail());
+        
+        // Check if the user's email is already verified (shouldn't happen but just in case)
+        if (user.isEmailVerified()) {
+            Log.d(TAG, "User's email is already verified");
+            progressBar.setVisibility(View.GONE);
+            Toast.makeText(OTPVerificationActivity.this, 
+                "Your email is already verified. You can now log in.", 
+                Toast.LENGTH_LONG).show();
+            // Redirect to login page
+            startActivity(new Intent(OTPVerificationActivity.this, LoginActivity.class));
+            finish();
+            return;
+        }
+        
         user.sendEmailVerification()
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
@@ -156,6 +170,7 @@ public class OTPVerificationActivity extends AppCompatActivity {
                         progressBar.setVisibility(View.GONE);
                         Log.e(TAG, "Failed to send verification email to: " + user.getEmail(), e);
                         
+                        // Try to get more specific error information
                         String errorMessage = "Failed to send verification email";
                         if (e instanceof FirebaseAuthActionCodeException) {
                             errorMessage = "Email action code error: " + e.getMessage();
@@ -165,9 +180,20 @@ public class OTPVerificationActivity extends AppCompatActivity {
                             errorMessage = "Failed to send verification email: " + e.getMessage();
                         }
                         
+                        // Log the full stack trace for debugging
+                        Log.e(TAG, "Full error details:", e);
+                        
                         Toast.makeText(OTPVerificationActivity.this, 
                             errorMessage, 
                             Toast.LENGTH_LONG).show();
+                    }
+                })
+                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (!task.isSuccessful()) {
+                            Log.e(TAG, "Email verification task completed with failure", task.getException());
+                        }
                     }
                 });
     }
