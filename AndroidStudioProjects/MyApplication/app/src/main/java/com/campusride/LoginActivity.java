@@ -3,6 +3,7 @@ package com.campusride;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -10,6 +11,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.campusride.utils.FirebaseUtil;
 import com.campusride.utils.OTPService;
@@ -17,9 +19,10 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
-public class LoginActivity extends BaseActivity {
+public class LoginActivity extends AppCompatActivity {
 
     private EditText emailEditText, otpEditText;
     private Button sendOtpButton, verifyOtpButton;
@@ -43,10 +46,10 @@ public class LoginActivity extends BaseActivity {
         otpService = new OTPService(this);
         android.util.Log.d("LoginActivity", "OTP Service initialized");
         
-
         // Check if user is already logged in
         FirebaseUser currentUser = FirebaseUtil.getAuth().getCurrentUser();
         if (currentUser != null) {
+            Log.d("LoginActivity", "User is already logged in");
             startActivity(new Intent(LoginActivity.this, HomeActivity.class));
             finish();
             return;
@@ -109,11 +112,12 @@ public class LoginActivity extends BaseActivity {
             return;
         }
 
-        if (!email.endsWith("@vitstudent.ac.in")) {
-            emailEditText.setError("Please use your college email (@vitstudent.ac.in)");
-            emailEditText.requestFocus();
-            return;
-        }
+        // Removed the college email restriction
+        // if (!email.endsWith("@vitstudent.ac.in")) {
+        //     emailEditText.setError("Please use your college email (@vitstudent.ac.in)");
+        //     emailEditText.requestFocus();
+        //     return;
+        // }
 
         android.util.Log.d("LoginActivity", "Email validation passed, generating OTP...");
         currentEmail = email;
@@ -271,29 +275,6 @@ public class LoginActivity extends BaseActivity {
         } catch (Exception e) {
             android.util.Log.w("LoginActivity", "Error storing user profile", e);
         }
-    }
-    
-    private void authenticateWithFixedPassword() {
-        // Simplified fallback authentication with a simple fixed password
-        android.util.Log.d("LoginActivity", "Trying fallback authentication with fixed password");
-        String fixedPassword = "campusride123";
-        
-        // Try to sign in with fixed password
-        FirebaseUtil.getAuth().signInWithEmailAndPassword(currentEmail, fixedPassword)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (task.isSuccessful()) {
-                            android.util.Log.d("LoginActivity", "Fallback sign in successful");
-                            Toast.makeText(LoginActivity.this, "Welcome back!", Toast.LENGTH_SHORT).show();
-                            navigateToHome();
-                        } else {
-                            // If sign in fails, try to create user with fixed password
-                            android.util.Log.d("LoginActivity", "Sign in failed, creating new user with fixed password");
-                            createNewUser(fixedPassword);
-                        }
-                    }
-                });
     }
     
     private void navigateToHome() {

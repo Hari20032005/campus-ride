@@ -26,6 +26,8 @@ public class FirebaseUtil {
             } catch (Exception e) {
                 Log.e(TAG, "Error initializing FirebaseApp", e);
             }
+        } else {
+            Log.d(TAG, "FirebaseUtil already initialized, skipping initialization");
         }
     }
 
