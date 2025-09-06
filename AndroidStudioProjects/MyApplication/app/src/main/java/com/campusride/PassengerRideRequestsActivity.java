@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.campusride.models.RideRequest;
 import com.campusride.utils.FirebaseUtil;
+import com.campusride.OldPassengerRideRequestAdapter;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -24,7 +25,7 @@ public class PassengerRideRequestsActivity extends AppCompatActivity {
     private static final String TAG = "PassengerRequests";
     
     private RecyclerView passengerRequestsRecyclerView;
-    private PassengerRideRequestAdapter requestAdapter;
+    private OldPassengerRideRequestAdapter requestAdapter;
     private List<RideRequest> passengerRequests;
     private List<String> previousRequestStatuses;
 
@@ -45,7 +46,7 @@ public class PassengerRideRequestsActivity extends AppCompatActivity {
     private void setupRecyclerView() {
         passengerRequests = new ArrayList<>();
         previousRequestStatuses = new ArrayList<>();
-        requestAdapter = new PassengerRideRequestAdapter(passengerRequests);
+        requestAdapter = new OldPassengerRideRequestAdapter(passengerRequests);
         passengerRequestsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         passengerRequestsRecyclerView.setAdapter(requestAdapter);
     }

@@ -36,6 +36,9 @@
         <activity android:name=".OTPVerificationActivity" />
         <activity android:name=".ProfileCompletionActivity" />
         <activity android:name=".UserDetailActivity" />
+        <activity android:name=".PostRideRequestActivity" />
+        <activity android:name=".BrowseRideRequestsActivity" />
+        <activity android:name=".MyRideRequestsActivity" />
         <activity android:name=".HomeActivity" />
         <activity android:name=".RideCreationActivity" />
         <activity android:name=".RideSearchActivity" />

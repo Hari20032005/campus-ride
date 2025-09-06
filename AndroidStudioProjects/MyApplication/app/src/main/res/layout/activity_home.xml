@@ -28,7 +28,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="@string/post_ride"
+            android:text="Post Ride Request"
             android:layout_marginEnd="8dp"
             style="@style/Widget.MaterialComponents.Button" />
 
@@ -37,7 +37,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="@string/search_ride"
+            android:text="Browse Rides"
             android:layout_marginStart="8dp"
             style="@style/Widget.MaterialComponents.Button" />
 
@@ -50,23 +50,13 @@
         android:layout_marginBottom="24dp">
 
         <Button
-            android:id="@+id/rideRequestsButton"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/pending_requests"
-            android:layout_marginEnd="8dp"
-            style="@style/Widget.MaterialComponents.Button" />
-
-        <Button
             android:id="@+id/myRideRequestsButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/my_ride_requests"
-            android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+            style="@style/Widget.MaterialComponents.Button" />
 
         <Button
             android:id="@+id/profileButton"
@@ -92,6 +82,6 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        tools:listitem="@layout/item_ride" />
+        tools:listitem="@layout/item_my_ride_request" />
 
 </LinearLayout>
