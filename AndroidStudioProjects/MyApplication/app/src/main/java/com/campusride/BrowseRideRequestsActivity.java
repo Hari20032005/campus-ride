@@ -1,5 +1,6 @@
 package com.campusride;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
@@ -49,6 +50,11 @@ public class BrowseRideRequestsActivity extends AppCompatActivity {
             @Override
             public void onAcceptRequest(PassengerRideRequest request) {
                 showAcceptConfirmation(request);
+            }
+            
+            @Override
+            public void onViewDetails(PassengerRideRequest request) {
+                viewRideRequestDetails(request);
             }
         });
         rideRequestsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -155,5 +161,11 @@ public class BrowseRideRequestsActivity extends AppCompatActivity {
                     Toast.LENGTH_SHORT).show();
             }
         });
+    }
+    
+    private void viewRideRequestDetails(PassengerRideRequest request) {
+        Intent intent = new Intent(this, DriverRideRequestDetailsActivity.class);
+        intent.putExtra("REQUEST_ID", request.getRequestId());
+        startActivity(intent);
     }
 }

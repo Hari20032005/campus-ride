@@ -1,5 +1,6 @@
 package com.campusride;
 
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,6 +20,7 @@ public class BrowseRideRequestsAdapter extends RecyclerView.Adapter<BrowseRideRe
 
     public interface OnRequestActionListener {
         void onAcceptRequest(PassengerRideRequest request);
+        void onViewDetails(PassengerRideRequest request);
     }
 
     public BrowseRideRequestsAdapter(List<PassengerRideRequest> requests, OnRequestActionListener listener) {
@@ -51,8 +53,8 @@ public class BrowseRideRequestsAdapter extends RecyclerView.Adapter<BrowseRideRe
 
     class RequestViewHolder extends RecyclerView.ViewHolder {
         private TextView passengerNameTextView, sourceTextView, destinationTextView, 
-                        dateTextView, timeTextView;
-        private Button acceptButton;
+                        dateTextView, timeTextView, statusTextView;
+        private Button acceptButton, viewDetailsButton;
 
         public RequestViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -61,7 +63,9 @@ public class BrowseRideRequestsAdapter extends RecyclerView.Adapter<BrowseRideRe
             destinationTextView = itemView.findViewById(R.id.destinationTextView);
             dateTextView = itemView.findViewById(R.id.dateTextView);
             timeTextView = itemView.findViewById(R.id.timeTextView);
+            statusTextView = itemView.findViewById(R.id.statusTextView);
             acceptButton = itemView.findViewById(R.id.acceptButton);
+            viewDetailsButton = itemView.findViewById(R.id.viewDetailsButton);
         }
 
         public void bind(PassengerRideRequest request) {
@@ -70,10 +74,36 @@ public class BrowseRideRequestsAdapter extends RecyclerView.Adapter<BrowseRideRe
             destinationTextView.setText(request.getDestination());
             dateTextView.setText(request.getDate());
             timeTextView.setText(request.getTime());
+            
+            // Set status with appropriate color
+            statusTextView.setText(request.getStatus());
+            switch (request.getStatus()) {
+                case "accepted":
+                    statusTextView.setTextColor(itemView.getContext().getResources().getColor(R.color.green_500));
+                    acceptButton.setVisibility(View.GONE);
+                    viewDetailsButton.setVisibility(View.VISIBLE);
+                    break;
+                case "pending":
+                    statusTextView.setTextColor(itemView.getContext().getResources().getColor(R.color.orange_500));
+                    acceptButton.setVisibility(View.VISIBLE);
+                    viewDetailsButton.setVisibility(View.GONE);
+                    break;
+                default:
+                    statusTextView.setTextColor(itemView.getContext().getResources().getColor(R.color.red_500));
+                    acceptButton.setVisibility(View.GONE);
+                    viewDetailsButton.setVisibility(View.GONE);
+                    break;
+            }
 
             acceptButton.setOnClickListener(v -> {
                 if (listener != null) {
                     listener.onAcceptRequest(request);
+                }
+            });
+            
+            viewDetailsButton.setOnClickListener(v -> {
+                if (listener != null) {
+                    listener.onViewDetails(request);
                 }
             });
         }
