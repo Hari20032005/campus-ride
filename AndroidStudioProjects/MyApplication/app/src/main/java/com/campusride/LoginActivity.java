@@ -278,8 +278,34 @@ public class LoginActivity extends AppCompatActivity {
     }
     
     private void navigateToHome() {
-        startActivity(new Intent(LoginActivity.this, HomeActivity.class));
-        finish();
+        // Check if user profile is complete before going to home screen
+        checkUserProfileCompletion();
+    }
+    
+    private void checkUserProfileCompletion() {
+        FirebaseUser currentUser = FirebaseUtil.getAuth().getCurrentUser();
+        if (currentUser != null) {
+            FirebaseUtil.getDatabase().getReference("users").child(currentUser.getUid())
+                    .child("profileComplete").get()
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            Boolean profileComplete = task.getResult().getValue(Boolean.class);
+                            if (profileComplete != null && profileComplete) {
+                                // Profile is complete, go to home
+                                startActivity(new Intent(LoginActivity.this, HomeActivity.class));
+                                finish();
+                            } else {
+                                // Profile not complete, go to profile completion
+                                startActivity(new Intent(LoginActivity.this, ProfileCompletionActivity.class));
+                                finish();
+                            }
+                        } else {
+                            // Error checking profile, default to profile completion
+                            startActivity(new Intent(LoginActivity.this, ProfileCompletionActivity.class));
+                            finish();
+                        }
+                    });
+        }
     }
 
     private void showOtpSection() {

@@ -36,10 +36,30 @@ public class ProfileActivity extends AppCompatActivity {
     private void loadUserProfile() {
         FirebaseUser currentUser = FirebaseUtil.getAuth().getCurrentUser();
         if (currentUser != null) {
-            nameTextView.setText(currentUser.getDisplayName() != null ? currentUser.getDisplayName() : "No name set");
             emailTextView.setText(currentUser.getEmail());
-            // TODO: Load rides count from Firebase
-            ridesCountTextView.setText("0");
+            
+            // Load additional profile info from Firebase Database
+            FirebaseUtil.getDatabase().getReference("users").child(currentUser.getUid())
+                    .get()
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            // Get user data from Firebase
+                            if (task.getResult().exists()) {
+                                // Extract user data
+                                String name = task.getResult().child("name").getValue(String.class);
+                                String mobile = task.getResult().child("mobile").getValue(String.class);
+                                String regNo = task.getResult().child("regNo").getValue(String.class);
+                                
+                                // Update UI with user data
+                                nameTextView.setText(name != null ? name : "No name set");
+                                
+                                // You can also display mobile and regNo if you add TextViews for them
+                                // For now, we'll just display name and email
+                            }
+                        }
+                        // TODO: Load rides count from Firebase
+                        ridesCountTextView.setText("0");
+                    });
         }
     }
 
