@@ -66,36 +66,48 @@ public class BrowseRideRequestsActivity extends AppCompatActivity {
         Log.d(TAG, "Attempting to load pending ride requests");
         Log.d(TAG, "Database reference: " + requestsRef.toString());
         
-        requestsRef.orderByChild("status").equalTo("pending")
-                .addValueEventListener(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        Log.d(TAG, "Data loaded successfully, count: " + dataSnapshot.getChildrenCount());
-                        pendingRequests.clear();
-                        for (DataSnapshot requestSnapshot : dataSnapshot.getChildren()) {
-                            PassengerRideRequest request = requestSnapshot.getValue(PassengerRideRequest.class);
-                            if (request != null) {
+        // Listen for all requests, then filter on client side
+        requestsRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                Log.d(TAG, "Data loaded successfully, count: " + dataSnapshot.getChildrenCount());
+                pendingRequests.clear();
+                for (DataSnapshot requestSnapshot : dataSnapshot.getChildren()) {
+                    PassengerRideRequest request = requestSnapshot.getValue(PassengerRideRequest.class);
+                    if (request != null) {
+                        // Only show pending requests or requests accepted by current driver
+                        FirebaseUser currentUser = FirebaseUtil.getAuth().getCurrentUser();
+                        if (currentUser != null) {
+                            if ("pending".equals(request.getStatus())) {
+                                // Show all pending requests
                                 pendingRequests.add(request);
-                                Log.d(TAG, "Added request: " + request.getRequestId() + " from " + request.getPassengerName());
+                                Log.d(TAG, "Added pending request: " + request.getRequestId() + " from " + request.getPassengerName());
+                            } else if ("accepted".equals(request.getStatus()) && 
+                                      currentUser.getUid().equals(request.getDriverId())) {
+                                // Show requests accepted by current driver
+                                pendingRequests.add(request);
+                                Log.d(TAG, "Added accepted request (by current driver): " + request.getRequestId());
                             }
                         }
-                        // Sort by creation time (newest first)
-                        pendingRequests.sort((r1, r2) -> Long.compare(r2.getCreatedAt(), r1.getCreatedAt()));
-                        rideRequestAdapter.updateRequests(pendingRequests);
-                        Log.d(TAG, "Loaded " + pendingRequests.size() + " pending ride requests");
                     }
+                }
+                // Sort by creation time (newest first)
+                pendingRequests.sort((r1, r2) -> Long.compare(r2.getCreatedAt(), r1.getCreatedAt()));
+                rideRequestAdapter.updateRequests(pendingRequests);
+                Log.d(TAG, "Loaded " + pendingRequests.size() + " ride requests (pending + accepted by current driver)");
+            }
 
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-                        Log.e(TAG, "Error loading ride requests", databaseError.toException());
-                        String errorMessage = databaseError.getMessage();
-                        if (databaseError.getCode() == DatabaseError.PERMISSION_DENIED) {
-                            errorMessage = "Permission denied. Please check Firebase security rules.";
-                        }
-                        Toast.makeText(BrowseRideRequestsActivity.this, "Failed to load ride requests: " + errorMessage, 
-                            Toast.LENGTH_LONG).show();
-                    }
-                });
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.e(TAG, "Error loading ride requests", databaseError.toException());
+                String errorMessage = databaseError.getMessage();
+                if (databaseError.getCode() == DatabaseError.PERMISSION_DENIED) {
+                    errorMessage = "Permission denied. Please check Firebase security rules.";
+                }
+                Toast.makeText(BrowseRideRequestsActivity.this, "Failed to load ride requests: " + errorMessage, 
+                    Toast.LENGTH_LONG).show();
+            }
+        });
     }
     
     private void showAcceptConfirmation(PassengerRideRequest request) {
@@ -112,6 +124,23 @@ public class BrowseRideRequestsActivity extends AppCompatActivity {
         FirebaseUser currentUser = FirebaseUtil.getAuth().getCurrentUser();
         if (currentUser == null) {
             Toast.makeText(this, "You must be logged in to accept ride requests", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        // Check if this request is already accepted by this driver
+        if ("accepted".equals(request.getStatus()) && currentUser.getUid().equals(request.getDriverId())) {
+            // Request is already accepted by this driver, just show details
+            viewRideRequestDetails(request);
+            return;
+        }
+        
+        // Check if this request is already accepted by another driver
+        if ("accepted".equals(request.getStatus())) {
+            // Request is already accepted by another driver
+            Toast.makeText(this, "This ride request has already been accepted by another driver", Toast.LENGTH_SHORT).show();
+            // Refresh the list to remove this request
+            pendingRequests.remove(request);
+            rideRequestAdapter.updateRequests(pendingRequests);
             return;
         }
         
@@ -138,8 +167,13 @@ public class BrowseRideRequestsActivity extends AppCompatActivity {
                                         Toast.makeText(BrowseRideRequestsActivity.this, 
                                             "Ride request accepted successfully! Contact details shared with passenger.", Toast.LENGTH_LONG).show();
                                         
-                                        // Remove the request from the list (so other drivers can't accept it)
-                                        pendingRequests.remove(request);
+                                        // Update the request in the list to show "View Details" button
+                                        for (int i = 0; i < pendingRequests.size(); i++) {
+                                            if (pendingRequests.get(i).getRequestId().equals(request.getRequestId())) {
+                                                pendingRequests.set(i, request);
+                                                break;
+                                            }
+                                        }
                                         rideRequestAdapter.updateRequests(pendingRequests);
                                     } else {
                                         Toast.makeText(BrowseRideRequestsActivity.this, 
