@@ -6,20 +6,29 @@ import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
 import com.campusride.utils.FirebaseUtil;
+import com.campusride.utils.OTPService;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseUser;
 
 public class LoginActivity extends BaseActivity {
 
-    private EditText emailEditText, passwordEditText;
-    private Button loginButton, registerButton;
+    private EditText emailEditText, otpEditText;
+    private Button sendOtpButton, verifyOtpButton;
+    private TextView resendOtpText;
+    private TextInputLayout otpLayout;
+    
+    private OTPService otpService;
+    private String currentEmail = "";
+    private boolean otpSent = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,6 +37,12 @@ public class LoginActivity extends BaseActivity {
 
         // Initialize Firebase
         FirebaseUtil.initialize(this);
+        android.util.Log.d("LoginActivity", "Firebase initialized");
+        
+        // Initialize OTP Service
+        otpService = new OTPService(this);
+        android.util.Log.d("LoginActivity", "OTP Service initialized");
+        
 
         // Check if user is already logged in
         FirebaseUser currentUser = FirebaseUtil.getAuth().getCurrentUser();
@@ -43,30 +58,50 @@ public class LoginActivity extends BaseActivity {
 
     private void initViews() {
         emailEditText = findViewById(R.id.emailEditText);
-        passwordEditText = findViewById(R.id.passwordEditText);
-        loginButton = findViewById(R.id.loginButton);
-        registerButton = findViewById(R.id.registerButton);
+        otpEditText = findViewById(R.id.otpEditText);
+        sendOtpButton = findViewById(R.id.sendOtpButton);
+        verifyOtpButton = findViewById(R.id.verifyOtpButton);
+        resendOtpText = findViewById(R.id.resendOtpText);
+        otpLayout = findViewById(R.id.otpLayout);
     }
 
     private void setClickListeners() {
-        loginButton.setOnClickListener(new View.OnClickListener() {
+        sendOtpButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                loginUser();
+                sendOTP();
             }
         });
 
-        registerButton.setOnClickListener(new View.OnClickListener() {
+        verifyOtpButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                registerUser();
+                verifyOTP();
+            }
+        });
+        
+        resendOtpText.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                resendOTP();
+            }
+        });
+        
+        // Add debug: Long press email field to test Firebase
+        emailEditText.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                android.util.Log.d("LoginActivity", "Testing Firebase connection...");
+                startActivity(new Intent(LoginActivity.this, FirebaseTestActivity.class));
+                return true;
             }
         });
     }
 
-    private void loginUser() {
+    private void sendOTP() {
+        android.util.Log.d("LoginActivity", "sendOTP() called");
         String email = emailEditText.getText().toString().trim();
-        String password = passwordEditText.getText().toString().trim();
+        android.util.Log.d("LoginActivity", "Email entered: " + email);
 
         if (TextUtils.isEmpty(email)) {
             emailEditText.setError("Email is required");
@@ -80,83 +115,228 @@ public class LoginActivity extends BaseActivity {
             return;
         }
 
-        if (TextUtils.isEmpty(password)) {
-            passwordEditText.setError("Password is required");
-            passwordEditText.requestFocus();
+        android.util.Log.d("LoginActivity", "Email validation passed, generating OTP...");
+        currentEmail = email;
+        sendOtpButton.setEnabled(false);
+        sendOtpButton.setText("Sending email...");
+        
+        otpService.generateAndSendOTP(email, new OTPService.OTPCallback() {
+            @Override
+            public void onSuccess(String message) {
+                Toast.makeText(LoginActivity.this, message, Toast.LENGTH_LONG).show();
+                
+                // Show additional helpful message if email was sent successfully
+                if (message.contains("email address")) {
+                    Toast.makeText(LoginActivity.this, 
+                        "📧 Check your email (including spam folder). Email may take 1-2 minutes to arrive.", 
+                        Toast.LENGTH_LONG).show();
+                }
+                
+                showOtpSection();
+                sendOtpButton.setEnabled(true);
+                sendOtpButton.setText("Send OTP");
+                otpSent = true;
+            }
+
+            @Override
+            public void onFailure(String error) {
+                Toast.makeText(LoginActivity.this, error, Toast.LENGTH_SHORT).show();
+                sendOtpButton.setEnabled(true);
+                sendOtpButton.setText("Send OTP");
+            }
+        });
+    }
+    
+    private void resendOTP() {
+        if (!TextUtils.isEmpty(currentEmail)) {
+            resendOtpText.setEnabled(false);
+            
+            otpService.generateAndSendOTP(currentEmail, new OTPService.OTPCallback() {
+                @Override
+                public void onSuccess(String message) {
+                    Toast.makeText(LoginActivity.this, "OTP resent: " + message, Toast.LENGTH_LONG).show();
+                    resendOtpText.setEnabled(true);
+                    otpEditText.setText(""); // Clear previous OTP
+                }
+
+                @Override
+                public void onFailure(String error) {
+                    Toast.makeText(LoginActivity.this, error, Toast.LENGTH_SHORT).show();
+                    resendOtpText.setEnabled(true);
+                }
+            });
+        }
+    }
+
+    private void verifyOTP() {
+        String otp = otpEditText.getText().toString().trim();
+
+        if (TextUtils.isEmpty(otp)) {
+            otpEditText.setError("OTP is required");
+            otpEditText.requestFocus();
             return;
         }
 
-        if (password.length() < 6) {
-            passwordEditText.setError("Password must be at least 6 characters");
-            passwordEditText.requestFocus();
+        if (otp.length() != 6) {
+            otpEditText.setError("OTP must be 6 digits");
+            otpEditText.requestFocus();
             return;
         }
 
-        // Sign in with Firebase
-        FirebaseUtil.getAuth().signInWithEmailAndPassword(email, password)
+        verifyOtpButton.setEnabled(false);
+        verifyOtpButton.setText("Verifying...");
+        
+        otpService.verifyOTP(currentEmail, otp, new OTPService.OTPCallback() {
+            @Override
+            public void onSuccess(String message) {
+                Toast.makeText(LoginActivity.this, message, Toast.LENGTH_SHORT).show();
+                // OTP verified, now authenticate/register user
+                authenticateUser();
+            }
+
+            @Override
+            public void onFailure(String error) {
+                Toast.makeText(LoginActivity.this, error, Toast.LENGTH_SHORT).show();
+                verifyOtpButton.setEnabled(true);
+                verifyOtpButton.setText("Verify OTP");
+            }
+        });
+    }
+    
+    private void authenticateUser() {
+        // Since OTP is verified, we can trust the user's identity
+        // We'll check if user already exists, and if so, sign them in
+        // If not, we'll create a new user with a fixed password
+        android.util.Log.d("LoginActivity", "Authenticating OTP-verified user: " + currentEmail);
+        
+        // Try to sign in first (assuming user might already exist)
+        String fixedPassword = "campusride123";
+        FirebaseUtil.getAuth().signInWithEmailAndPassword(currentEmail, fixedPassword)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
-                            // Sign in success
-                            FirebaseUser user = FirebaseUtil.getAuth().getCurrentUser();
-                            Toast.makeText(LoginActivity.this, "Login successful", Toast.LENGTH_SHORT).show();
-                            startActivity(new Intent(LoginActivity.this, HomeActivity.class));
-                            finish();
+                            android.util.Log.d("LoginActivity", "Existing user signed in successfully");
+                            Toast.makeText(LoginActivity.this, "Welcome back!", Toast.LENGTH_SHORT).show();
+                            navigateToHome();
                         } else {
-                            // If sign in fails, display a message to the user.
-                            Toast.makeText(LoginActivity.this, "Login failed: " + task.getException().getMessage(),
-                                    Toast.LENGTH_SHORT).show();
+                            android.util.Log.d("LoginActivity", "User doesn't exist, creating new user");
+                            // User doesn't exist, create a new one
+                            createNewUser(fixedPassword);
                         }
                     }
                 });
     }
-
-    private void registerUser() {
-        String email = emailEditText.getText().toString().trim();
-        String password = passwordEditText.getText().toString().trim();
-
-        if (TextUtils.isEmpty(email)) {
-            emailEditText.setError("Email is required");
-            emailEditText.requestFocus();
-            return;
+    
+    private void createNewUser(String consistentPassword) {
+        android.util.Log.d("LoginActivity", "Attempting to create new user for: " + currentEmail);
+        FirebaseUtil.getAuth().createUserWithEmailAndPassword(currentEmail, consistentPassword)
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        verifyOtpButton.setEnabled(true);
+                        verifyOtpButton.setText("Verify OTP");
+                        
+                        if (task.isSuccessful()) {
+                            android.util.Log.d("LoginActivity", "New user created successfully");
+                            FirebaseUser user = task.getResult().getUser();
+                            if (user != null) {
+                                // Store user profile in Firebase Database
+                                storeUserProfile(user.getUid(), currentEmail);
+                            }
+                            Toast.makeText(LoginActivity.this, "Welcome to Campus Ride!", Toast.LENGTH_SHORT).show();
+                            navigateToHome();
+                        } else {
+                            String errorMessage = task.getException() != null ? task.getException().getMessage() : "Unknown error";
+                            android.util.Log.e("LoginActivity", "User creation failed: " + errorMessage);
+                            Toast.makeText(LoginActivity.this, "Authentication failed: " + errorMessage, Toast.LENGTH_LONG).show();
+                        }
+                    }
+                });
+    }
+    
+    private void storeUserProfile(String userId, String email) {
+        // Store user profile in Firebase Database
+        android.util.Log.d("LoginActivity", "Storing user profile for: " + email);
+        try {
+            FirebaseUtil.getDatabase().getReference("users").child(userId)
+                .child("email").setValue(email)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        android.util.Log.d("LoginActivity", "User profile stored successfully");
+                    } else {
+                        android.util.Log.w("LoginActivity", "Failed to store user profile: " + task.getException());
+                    }
+                });
+        } catch (Exception e) {
+            android.util.Log.w("LoginActivity", "Error storing user profile", e);
         }
-
-        if (!email.endsWith("@vitstudent.ac.in")) {
-            emailEditText.setError("Please use your college email (@vitstudent.ac.in)");
-            emailEditText.requestFocus();
-            return;
-        }
-
-        if (TextUtils.isEmpty(password)) {
-            passwordEditText.setError("Password is required");
-            passwordEditText.requestFocus();
-            return;
-        }
-
-        if (password.length() < 6) {
-            passwordEditText.setError("Password must be at least 6 characters");
-            passwordEditText.requestFocus();
-            return;
-        }
-
-        // Create user with Firebase
-        FirebaseUtil.getAuth().createUserWithEmailAndPassword(email, password)
+    }
+    
+    private void authenticateWithFixedPassword() {
+        // Simplified fallback authentication with a simple fixed password
+        android.util.Log.d("LoginActivity", "Trying fallback authentication with fixed password");
+        String fixedPassword = "campusride123";
+        
+        // Try to sign in with fixed password
+        FirebaseUtil.getAuth().signInWithEmailAndPassword(currentEmail, fixedPassword)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
-                            // Sign up success
-                            FirebaseUser user = FirebaseUtil.getAuth().getCurrentUser();
-                            Toast.makeText(LoginActivity.this, "Registration successful", Toast.LENGTH_SHORT).show();
-                            startActivity(new Intent(LoginActivity.this, HomeActivity.class));
-                            finish();
+                            android.util.Log.d("LoginActivity", "Fallback sign in successful");
+                            Toast.makeText(LoginActivity.this, "Welcome back!", Toast.LENGTH_SHORT).show();
+                            navigateToHome();
                         } else {
-                            // If sign up fails, display a message to the user.
-                            Toast.makeText(LoginActivity.this, "Registration failed: " + task.getException().getMessage(),
-                                    Toast.LENGTH_SHORT).show();
+                            // If sign in fails, try to create user with fixed password
+                            android.util.Log.d("LoginActivity", "Sign in failed, creating new user with fixed password");
+                            createNewUser(fixedPassword);
                         }
                     }
                 });
+    }
+    
+    private void navigateToHome() {
+        startActivity(new Intent(LoginActivity.this, HomeActivity.class));
+        finish();
+    }
+
+    private void showOtpSection() {
+        // Hide send OTP button to prevent overlap
+        sendOtpButton.setVisibility(View.GONE);
+        
+        // Show OTP verification section
+        otpLayout.setVisibility(View.VISIBLE);
+        verifyOtpButton.setVisibility(View.VISIBLE);
+        resendOtpText.setVisibility(View.VISIBLE);
+        
+        // Disable email editing once OTP is sent
+        emailEditText.setEnabled(false);
+    }
+    
+    @Override
+    public void onBackPressed() {
+        if (otpSent) {
+            // If OTP was sent, allow user to go back to email entry
+            hideOtpSection();
+            otpSent = false;
+        } else {
+            super.onBackPressed();
+        }
+    }
+    
+    private void hideOtpSection() {
+        // Hide OTP verification section
+        otpLayout.setVisibility(View.GONE);
+        verifyOtpButton.setVisibility(View.GONE);
+        resendOtpText.setVisibility(View.GONE);
+        
+        // Show send OTP button again
+        sendOtpButton.setVisibility(View.VISIBLE);
+        
+        // Re-enable email editing
+        emailEditText.setEnabled(true);
+        otpEditText.setText("");
+        currentEmail = "";
     }
 }
