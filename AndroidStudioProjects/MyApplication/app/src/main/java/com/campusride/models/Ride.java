@@ -13,7 +13,10 @@ public class Ride {
     private String date;
     private String time;
     private String timestamp;
+    private String status; // pending, completed, cancelled
     private Map<String, Boolean> passengers; // Map of passenger IDs to request status
+    private long createdAt;
+    private long completedAt;
     
     // Required empty constructor for Firebase
     public Ride() {}
@@ -29,7 +32,10 @@ public class Ride {
         this.date = date;
         this.time = time;
         this.timestamp = timestamp;
+        this.status = "pending";
         this.passengers = new HashMap<>();
+        this.createdAt = System.currentTimeMillis();
+        this.completedAt = 0;
     }
     
     // Getters and setters
@@ -111,5 +117,29 @@ public class Ride {
     
     public void setPassengers(Map<String, Boolean> passengers) {
         this.passengers = passengers;
+    }
+    
+    public String getStatus() {
+        return status;
+    }
+    
+    public void setStatus(String status) {
+        this.status = status;
+    }
+    
+    public long getCreatedAt() {
+        return createdAt;
+    }
+    
+    public void setCreatedAt(long createdAt) {
+        this.createdAt = createdAt;
+    }
+    
+    public long getCompletedAt() {
+        return completedAt;
+    }
+    
+    public void setCompletedAt(long completedAt) {
+        this.completedAt = completedAt;
     }
 }

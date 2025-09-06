@@ -4,10 +4,12 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.campusride.models.Ride;
 import com.campusride.models.RideRequest;
 import com.campusride.models.User;
 import com.campusride.utils.FirebaseUtil;
@@ -56,6 +58,11 @@ public class RideRequestsActivity extends AppCompatActivity {
             public void onRejectRequest(RideRequest request) {
                 updateRequestStatus(request, "rejected");
             }
+
+            @Override
+            public void onCompleteRide(RideRequest request) {
+                showCompleteRideDialog(request);
+            }
         });
         requestsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         requestsRecyclerView.setAdapter(requestAdapter);
@@ -78,12 +85,12 @@ public class RideRequestsActivity extends AppCompatActivity {
                     RideRequest request = requestSnapshot.getValue(RideRequest.class);
                     if (request != null && currentUser.getUid().equals(request.getDriverId())) {
                         // Only show requests for rides created by the current user
-                        if ("pending".equals(request.getStatus())) {
+                        if ("pending".equals(request.getStatus()) || "accepted".equals(request.getStatus())) {
                             allRequests.add(request);
                         }
                     }
                 }
-                Log.d(TAG, "Loaded " + allRequests.size() + " pending requests for current driver from Firebase");
+                Log.d(TAG, "Loaded " + allRequests.size() + " requests for current driver from Firebase");
                 showPendingRequests();
             }
 
@@ -124,9 +131,7 @@ public class RideRequestsActivity extends AppCompatActivity {
                                             if (task.isSuccessful()) {
                                                 Toast.makeText(RideRequestsActivity.this, 
                                                     "Request accepted. Passenger will be notified.", Toast.LENGTH_SHORT).show();
-                                                // Remove the request from the list
-                                                pendingRequests.remove(request);
-                                                requestAdapter.updateRequests(pendingRequests);
+                                                // Don't remove from list immediately, let user complete the ride
                                             } else {
                                                 Toast.makeText(RideRequestsActivity.this, 
                                                     "Failed to update request: " + task.getException().getMessage(), 
@@ -166,5 +171,73 @@ public class RideRequestsActivity extends AppCompatActivity {
                         }
                     });
         }
+    }
+    
+    private void showCompleteRideDialog(RideRequest request) {
+        new AlertDialog.Builder(this)
+                .setTitle("Complete Ride")
+                .setMessage("Are you sure you want to mark this ride as completed?")
+                .setPositiveButton("Complete", (dialog, which) -> completeRide(request))
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+    
+    private void completeRide(RideRequest request) {
+        // Update the ride request status to indicate completion
+        DatabaseReference requestsRef = FirebaseUtil.getDatabase().getReference("ride_requests");
+        requestsRef.child(request.getRequestId()).child("status").setValue("completed")
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        // Also update the ride status to completed
+                        completeRideInDatabase(request);
+                    } else {
+                        Toast.makeText(RideRequestsActivity.this, 
+                            "Failed to update request: " + task.getException().getMessage(), 
+                            Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+    
+    private void completeRideInDatabase(RideRequest request) {
+        DatabaseReference ridesRef = FirebaseUtil.getDatabase().getReference("rides");
+        ridesRef.child(request.getRideId()).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    Ride ride = dataSnapshot.getValue(Ride.class);
+                    if (ride != null) {
+                        // Mark ride as completed
+                        ride.setStatus("completed");
+                        ride.setCompletedAt(System.currentTimeMillis());
+                        
+                        // Update ride in database
+                        ridesRef.child(request.getRideId()).setValue(ride)
+                                .addOnCompleteListener(task -> {
+                                    if (task.isSuccessful()) {
+                                        Toast.makeText(RideRequestsActivity.this, 
+                                            "Ride completed successfully!", Toast.LENGTH_SHORT).show();
+                                        
+                                        // Remove the request from the list
+                                        pendingRequests.remove(request);
+                                        requestAdapter.updateRequests(pendingRequests);
+                                        
+                                        // TODO: Update user ride counts in profiles
+                                    } else {
+                                        Toast.makeText(RideRequestsActivity.this, 
+                                            "Failed to complete ride: " + task.getException().getMessage(), 
+                                            Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Toast.makeText(RideRequestsActivity.this, 
+                    "Failed to load ride information: " + databaseError.getMessage(), 
+                    Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }
