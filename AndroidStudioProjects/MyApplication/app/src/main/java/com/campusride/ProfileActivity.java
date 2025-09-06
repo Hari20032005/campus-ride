@@ -2,18 +2,23 @@ package com.campusride;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.campusride.models.User;
+import com.campusride.models.User;
 import com.campusride.utils.FirebaseUtil;
 import com.google.firebase.auth.FirebaseUser;
 
 public class ProfileActivity extends AppCompatActivity {
 
-    private TextView nameTextView, emailTextView, ridesCountTextView;
+    private static final String TAG = "ProfileActivity";
+    
+    private TextView nameTextView, emailTextView, mobileTextView, regNoTextView, ridesCountTextView;
     private Button logoutButton;
 
     @Override
@@ -29,6 +34,8 @@ public class ProfileActivity extends AppCompatActivity {
     private void initViews() {
         nameTextView = findViewById(R.id.nameTextView);
         emailTextView = findViewById(R.id.emailTextView);
+        mobileTextView = findViewById(R.id.mobileTextView);
+        regNoTextView = findViewById(R.id.regNoTextView);
         ridesCountTextView = findViewById(R.id.ridesCountTextView);
         logoutButton = findViewById(R.id.logoutButton);
     }
@@ -42,23 +49,27 @@ public class ProfileActivity extends AppCompatActivity {
             FirebaseUtil.getDatabase().getReference("users").child(currentUser.getUid())
                     .get()
                     .addOnCompleteListener(task -> {
-                        if (task.isSuccessful()) {
+                        if (task.isSuccessful() && task.getResult().exists()) {
                             // Get user data from Firebase
-                            if (task.getResult().exists()) {
-                                // Extract user data
-                                String name = task.getResult().child("name").getValue(String.class);
-                                String mobile = task.getResult().child("mobile").getValue(String.class);
-                                String regNo = task.getResult().child("regNo").getValue(String.class);
-                                
+                            User user = task.getResult().getValue(User.class);
+                            
+                            if (user != null) {
                                 // Update UI with user data
-                                nameTextView.setText(name != null ? name : "No name set");
+                                nameTextView.setText(user.getName() != null ? user.getName() : "No name set");
+                                mobileTextView.setText(user.getMobile() != null ? user.getMobile() : "No mobile number");
+                                regNoTextView.setText(user.getRegNo() != null ? user.getRegNo() : "No registration number");
                                 
-                                // You can also display mobile and regNo if you add TextViews for them
-                                // For now, we'll just display name and email
+                                // Calculate total rides
+                                int totalRides = user.getRidesAsDriver() + user.getRidesAsPassenger();
+                                ridesCountTextView.setText(String.valueOf(totalRides));
                             }
+                        } else {
+                            Log.e(TAG, "Failed to load user profile", task.getException());
+                            nameTextView.setText("No name set");
+                            mobileTextView.setText("No mobile number");
+                            regNoTextView.setText("No registration number");
+                            ridesCountTextView.setText("0");
                         }
-                        // TODO: Load rides count from Firebase
-                        ridesCountTextView.setText("0");
                     });
         }
     }

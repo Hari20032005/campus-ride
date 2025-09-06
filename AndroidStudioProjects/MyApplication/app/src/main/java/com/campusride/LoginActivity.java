@@ -13,6 +13,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.campusride.models.User;
 import com.campusride.utils.FirebaseUtil;
 import com.campusride.utils.OTPService;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -260,11 +261,16 @@ public class LoginActivity extends AppCompatActivity {
     }
     
     private void storeUserProfile(String userId, String email) {
-        // Store user profile in Firebase Database
+        // Store user profile in Firebase Database using the User model
         android.util.Log.d("LoginActivity", "Storing user profile for: " + email);
         try {
+            // Create a basic user profile with just email for now
+            // The user will complete their profile in ProfileCompletionActivity
+            User user = new User(userId, "", email, "", "");
+            user.setProfileComplete(false); // Profile will be marked complete after user fills in details
+            
             FirebaseUtil.getDatabase().getReference("users").child(userId)
-                .child("email").setValue(email)
+                .setValue(user)
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
                         android.util.Log.d("LoginActivity", "User profile stored successfully");
@@ -286,11 +292,11 @@ public class LoginActivity extends AppCompatActivity {
         FirebaseUser currentUser = FirebaseUtil.getAuth().getCurrentUser();
         if (currentUser != null) {
             FirebaseUtil.getDatabase().getReference("users").child(currentUser.getUid())
-                    .child("profileComplete").get()
+                    .get()
                     .addOnCompleteListener(task -> {
-                        if (task.isSuccessful()) {
-                            Boolean profileComplete = task.getResult().getValue(Boolean.class);
-                            if (profileComplete != null && profileComplete) {
+                        if (task.isSuccessful() && task.getResult().exists()) {
+                            User user = task.getResult().getValue(User.class);
+                            if (user != null && user.isProfileComplete()) {
                                 // Profile is complete, go to home
                                 startActivity(new Intent(LoginActivity.this, HomeActivity.class));
                                 finish();
@@ -300,7 +306,7 @@ public class LoginActivity extends AppCompatActivity {
                                 finish();
                             }
                         } else {
-                            // Error checking profile, default to profile completion
+                            // User data doesn't exist or error, go to profile completion
                             startActivity(new Intent(LoginActivity.this, ProfileCompletionActivity.class));
                             finish();
                         }

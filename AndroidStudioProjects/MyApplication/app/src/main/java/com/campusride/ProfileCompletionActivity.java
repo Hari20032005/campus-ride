@@ -12,14 +12,12 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.campusride.models.User;
 import com.campusride.utils.FirebaseUtil;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class ProfileCompletionActivity extends AppCompatActivity {
 
@@ -104,15 +102,13 @@ public class ProfileCompletionActivity extends AppCompatActivity {
     }
     
     private void saveProfileToFirebase(String name, String mobile, String regNo) {
+        // Create user object
+        User user = new User(userId, name, FirebaseUtil.getAuth().getCurrentUser().getEmail(), mobile, regNo);
+        user.setProfileComplete(true);
+        
+        // Save to Firebase Database
         DatabaseReference userRef = FirebaseUtil.getDatabase().getReference("users").child(userId);
-        
-        Map<String, Object> userProfile = new HashMap<>();
-        userProfile.put("name", name);
-        userProfile.put("mobile", mobile);
-        userProfile.put("regNo", regNo);
-        userProfile.put("profileComplete", true);
-        
-        userRef.updateChildren(userProfile)
+        userRef.setValue(user)
                 .addOnCompleteListener(new OnCompleteListener<Void>() {
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
