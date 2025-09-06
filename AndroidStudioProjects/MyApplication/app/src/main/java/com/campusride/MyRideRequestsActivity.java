@@ -57,15 +57,20 @@ public class MyRideRequestsActivity extends AppCompatActivity {
         }
         
         DatabaseReference requestsRef = FirebaseUtil.getDatabase().getReference("passenger_ride_requests");
+        Log.d(TAG, "Attempting to load ride requests for user: " + currentUser.getUid());
+        Log.d(TAG, "Database reference: " + requestsRef.toString());
+        
         requestsRef.orderByChild("passengerId").equalTo(currentUser.getUid())
                 .addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
+                        Log.d(TAG, "Data loaded successfully, count: " + dataSnapshot.getChildrenCount());
                         myRequests.clear();
                         for (DataSnapshot requestSnapshot : dataSnapshot.getChildren()) {
                             PassengerRideRequest request = requestSnapshot.getValue(PassengerRideRequest.class);
                             if (request != null) {
                                 myRequests.add(request);
+                                Log.d(TAG, "Added request: " + request.getRequestId() + " with status " + request.getStatus());
                             }
                         }
                         // Sort by creation time (newest first)
@@ -77,8 +82,12 @@ public class MyRideRequestsActivity extends AppCompatActivity {
                     @Override
                     public void onCancelled(DatabaseError databaseError) {
                         Log.e(TAG, "Error loading ride requests", databaseError.toException());
-                        Toast.makeText(MyRideRequestsActivity.this, "Failed to load ride requests: " + databaseError.getMessage(), 
-                            Toast.LENGTH_SHORT).show();
+                        String errorMessage = databaseError.getMessage();
+                        if (databaseError.getCode() == DatabaseError.PERMISSION_DENIED) {
+                            errorMessage = "Permission denied. Please check Firebase security rules.";
+                        }
+                        Toast.makeText(MyRideRequestsActivity.this, "Failed to load ride requests: " + errorMessage, 
+                            Toast.LENGTH_LONG).show();
                     }
                 });
     }

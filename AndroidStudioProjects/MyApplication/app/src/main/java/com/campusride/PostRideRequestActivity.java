@@ -167,6 +167,8 @@ public class PostRideRequestActivity extends AppCompatActivity {
                         // Save to Firebase
                         DatabaseReference requestsRef = FirebaseUtil.getDatabase().getReference("passenger_ride_requests");
                         Log.d(TAG, "Attempting to save ride request: " + requestId);
+                        Log.d(TAG, "User ID: " + currentUser.getUid());
+                        Log.d(TAG, "Database reference: " + requestsRef.toString());
                         
                         requestsRef.child(requestId).setValue(rideRequest)
                                 .addOnCompleteListener(task -> {
@@ -176,12 +178,14 @@ public class PostRideRequestActivity extends AppCompatActivity {
                                         finish();
                                     } else {
                                         Log.e(TAG, "Failed to create ride request", task.getException());
-                                        Toast.makeText(PostRideRequestActivity.this, "Failed to post ride request: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                                        String errorMessage = task.getException() != null ? task.getException().getMessage() : "Unknown error";
+                                        Log.e(TAG, "Error details: " + errorMessage);
+                                        Toast.makeText(PostRideRequestActivity.this, "Failed to post ride request: " + errorMessage, Toast.LENGTH_LONG).show();
                                     }
                                 })
                                 .addOnFailureListener(e -> {
                                     Log.e(TAG, "Failed to create ride request with exception", e);
-                                    Toast.makeText(PostRideRequestActivity.this, "Failed to post ride request: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(PostRideRequestActivity.this, "Failed to post ride request: " + e.getMessage(), Toast.LENGTH_LONG).show();
                                 });
                     } else {
                         Toast.makeText(PostRideRequestActivity.this, "Failed to load passenger information", Toast.LENGTH_SHORT).show();
@@ -193,7 +197,8 @@ public class PostRideRequestActivity extends AppCompatActivity {
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                Toast.makeText(PostRideRequestActivity.this, "Failed to load passenger information: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                Log.e(TAG, "Failed to load passenger information", error.toException());
+                Toast.makeText(PostRideRequestActivity.this, "Failed to load passenger information: " + error.getMessage(), Toast.LENGTH_LONG).show();
             }
         });
     }
