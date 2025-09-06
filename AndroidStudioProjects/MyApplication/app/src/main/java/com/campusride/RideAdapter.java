@@ -49,11 +49,12 @@ public class RideAdapter extends RecyclerView.Adapter<RideAdapter.RideViewHolder
     }
 
     class RideViewHolder extends RecyclerView.ViewHolder {
-        private TextView driverNameTextView, sourceTextView, destinationTextView, dateTextView, timeTextView;
+        private TextView driverNameTextView, driverRegNoTextView, sourceTextView, destinationTextView, dateTextView, timeTextView;
 
         public RideViewHolder(@NonNull View itemView) {
             super(itemView);
             driverNameTextView = itemView.findViewById(R.id.driverNameTextView);
+            driverRegNoTextView = itemView.findViewById(R.id.driverRegNoTextView);
             sourceTextView = itemView.findViewById(R.id.sourceTextView);
             destinationTextView = itemView.findViewById(R.id.destinationTextView);
             dateTextView = itemView.findViewById(R.id.dateTextView);
@@ -71,6 +72,7 @@ public class RideAdapter extends RecyclerView.Adapter<RideAdapter.RideViewHolder
 
         public void bind(Ride ride) {
             driverNameTextView.setText(ride.getDriverName());
+            driverRegNoTextView.setText("Reg No: " + ride.getDriverRegNo());
             sourceTextView.setText(ride.getSource());
             destinationTextView.setText(ride.getDestination());
             dateTextView.setText(ride.getDate());

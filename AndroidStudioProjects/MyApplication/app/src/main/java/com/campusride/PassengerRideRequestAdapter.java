@@ -3,17 +3,13 @@ package com.campusride;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.campusride.models.RideRequest;
-import com.campusride.utils.FirebaseUtil;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.ValueEventListener;
 
 import java.util.List;
 
@@ -49,7 +45,8 @@ public class PassengerRideRequestAdapter extends RecyclerView.Adapter<PassengerR
 
     class RequestViewHolder extends RecyclerView.ViewHolder {
         private TextView driverNameTextView, sourceTextView, destinationTextView, 
-                        dateTextView, timeTextView, statusTextView;
+                        dateTextView, timeTextView, statusTextView, driverMobileTextView;
+        private LinearLayout driverContactLayout;
 
         public RequestViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -59,6 +56,8 @@ public class PassengerRideRequestAdapter extends RecyclerView.Adapter<PassengerR
             dateTextView = itemView.findViewById(R.id.dateTextView);
             timeTextView = itemView.findViewById(R.id.timeTextView);
             statusTextView = itemView.findViewById(R.id.statusTextView);
+            driverMobileTextView = itemView.findViewById(R.id.driverMobileTextView);
+            driverContactLayout = itemView.findViewById(R.id.driverContactLayout);
         }
 
         public void bind(RideRequest request) {
@@ -67,45 +66,31 @@ public class PassengerRideRequestAdapter extends RecyclerView.Adapter<PassengerR
             switch (request.getStatus()) {
                 case "accepted":
                     statusTextView.setTextColor(itemView.getContext().getResources().getColor(R.color.green_500));
+                    // Show driver contact information when accepted
+                    if (request.getDriverMobile() != null && !request.getDriverMobile().isEmpty()) {
+                        driverContactLayout.setVisibility(View.VISIBLE);
+                        driverMobileTextView.setText("Mobile: " + request.getDriverMobile());
+                    } else {
+                        driverContactLayout.setVisibility(View.GONE);
+                    }
                     break;
                 case "rejected":
                     statusTextView.setTextColor(itemView.getContext().getResources().getColor(R.color.red_500));
+                    driverContactLayout.setVisibility(View.GONE);
                     break;
                 case "pending":
                 default:
                     statusTextView.setTextColor(itemView.getContext().getResources().getColor(R.color.orange_500));
+                    driverContactLayout.setVisibility(View.GONE);
                     break;
             }
             
-            // Fetch ride details from Firebase
-            DatabaseReference rideRef = FirebaseUtil.getDatabase().getReference("rides").child(request.getRideId());
-            rideRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                    if (dataSnapshot.exists()) {
-                        // Get ride details
-                        String driverName = dataSnapshot.child("driverName").getValue(String.class);
-                        String source = dataSnapshot.child("source").getValue(String.class);
-                        String destination = dataSnapshot.child("destination").getValue(String.class);
-                        String date = dataSnapshot.child("date").getValue(String.class);
-                        String time = dataSnapshot.child("time").getValue(String.class);
-                        
-                        // Update UI on main thread
-                        itemView.post(() -> {
-                            if (driverName != null) driverNameTextView.setText(driverName);
-                            if (source != null) sourceTextView.setText(source);
-                            if (destination != null) destinationTextView.setText(destination);
-                            if (date != null) dateTextView.setText(date);
-                            if (time != null) timeTextView.setText(time);
-                        });
-                    }
-                }
-
-                @Override
-                public void onCancelled(@NonNull DatabaseError databaseError) {
-                    // Handle error
-                }
-            });
+            // Set basic ride information
+            driverNameTextView.setText(request.getDriverName() != null ? request.getDriverName() : "Unknown Driver");
+            sourceTextView.setText(request.getSource() != null ? request.getSource() : "");
+            destinationTextView.setText(request.getDestination() != null ? request.getDestination() : "");
+            dateTextView.setText(request.getDate() != null ? request.getDate() : "");
+            timeTextView.setText(request.getTime() != null ? request.getTime() : "");
         }
     }
 }

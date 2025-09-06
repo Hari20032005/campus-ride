@@ -11,12 +11,17 @@ import android.widget.EditText;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.campusride.models.Ride;
+import com.campusride.models.User;
 import com.campusride.utils.FirebaseUtil;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.Calendar;
 import java.util.UUID;
@@ -132,41 +137,62 @@ public class RideCreationActivity extends AppCompatActivity {
             return;
         }
 
-        // Create a new ride
-        String rideId = UUID.randomUUID().toString();
-        Ride ride = new Ride(
-                rideId,
-                currentUser.getUid(),
-                currentUser.getDisplayName() != null ? currentUser.getDisplayName() : "Unknown Driver",
-                source,
-                destination,
-                date,
-                time,
-                0.0, // sourceLat - to be implemented with Google Maps
-                0.0, // sourceLng - to be implemented with Google Maps
-                0.0, // destinationLat - to be implemented with Google Maps
-                0.0  // destinationLng - to be implemented with Google Maps
-        );
+        // Fetch driver details from Firebase before creating ride
+        DatabaseReference userRef = FirebaseUtil.getDatabase().getReference("users").child(currentUser.getUid());
+        userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    User driver = snapshot.getValue(User.class);
+                    if (driver != null) {
+                        // Create a new ride with driver details
+                        String rideId = UUID.randomUUID().toString();
+                        String timestamp = String.valueOf(System.currentTimeMillis());
+                        
+                        Ride ride = new Ride(
+                                rideId,
+                                currentUser.getUid(),
+                                driver.getName() != null ? driver.getName() : "Unknown Driver",
+                                driver.getRegNo() != null ? driver.getRegNo() : "Unknown",
+                                source,
+                                destination,
+                                date,
+                                time,
+                                timestamp
+                        );
 
-        // Save to Firebase
-        DatabaseReference ridesRef = FirebaseUtil.getDatabase().getReference("rides");
-        Log.d("RideCreation", "Attempting to save ride: " + rideId);
-        Log.d("RideCreation", "Rides reference: " + ridesRef.toString());
-        
-        ridesRef.child(rideId).setValue(ride)
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        Log.d("RideCreation", "Ride created successfully");
-                        Toast.makeText(RideCreationActivity.this, "Ride created successfully", Toast.LENGTH_SHORT).show();
-                        finish();
+                        // Save to Firebase
+                        DatabaseReference ridesRef = FirebaseUtil.getDatabase().getReference("rides");
+                        Log.d("RideCreation", "Attempting to save ride: " + rideId);
+                        Log.d("RideCreation", "Rides reference: " + ridesRef.toString());
+                        
+                        ridesRef.child(rideId).setValue(ride)
+                                .addOnCompleteListener(task -> {
+                                    if (task.isSuccessful()) {
+                                        Log.d("RideCreation", "Ride created successfully");
+                                        Toast.makeText(RideCreationActivity.this, "Ride created successfully", Toast.LENGTH_SHORT).show();
+                                        finish();
+                                    } else {
+                                        Log.e("RideCreation", "Failed to create ride", task.getException());
+                                        Toast.makeText(RideCreationActivity.this, "Failed to create ride: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                                    }
+                                })
+                                .addOnFailureListener(e -> {
+                                    Log.e("RideCreation", "Failed to create ride with exception", e);
+                                    Toast.makeText(RideCreationActivity.this, "Failed to create ride: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                });
                     } else {
-                        Log.e("RideCreation", "Failed to create ride", task.getException());
-                        Toast.makeText(RideCreationActivity.this, "Failed to create ride: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(RideCreationActivity.this, "Failed to load driver information", Toast.LENGTH_SHORT).show();
                     }
-                })
-                .addOnFailureListener(e -> {
-                    Log.e("RideCreation", "Failed to create ride with exception", e);
-                    Toast.makeText(RideCreationActivity.this, "Failed to create ride: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                });
+                } else {
+                    Toast.makeText(RideCreationActivity.this, "Driver profile not found", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Toast.makeText(RideCreationActivity.this, "Failed to load driver information: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }

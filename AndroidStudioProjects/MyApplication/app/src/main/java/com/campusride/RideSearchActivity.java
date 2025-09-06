@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.campusride.models.Ride;
 import com.campusride.models.RideRequest;
+import com.campusride.models.User;
 import com.campusride.utils.FirebaseUtil;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -155,30 +156,58 @@ public class RideSearchActivity extends AppCompatActivity {
             return;
         }
         
-        // Create a new ride request
-        String requestId = UUID.randomUUID().toString();
-        // For now, we're using dummy values for pickup location
-        // In a full implementation, you would get the user's current location
-        RideRequest rideRequest = new RideRequest(
-                requestId,
-                ride.getRideId(),
-                ride.getDriverId(),  // Include the driver ID
-                currentUser.getUid(),
-                currentUser.getDisplayName() != null ? currentUser.getDisplayName() : "Unknown Passenger",
-                0.0, // pickupLat - to be implemented with Google Maps
-                0.0, // pickupLng - to be implemented with Google Maps
-                "User Location" // pickupLocation - to be implemented with Google Maps
-        );
-        
-        // Save to Firebase
-        DatabaseReference requestsRef = FirebaseUtil.getDatabase().getReference("ride_requests");
-        requestsRef.child(requestId).setValue(rideRequest)
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        Toast.makeText(RideSearchActivity.this, "Ride request sent successfully", Toast.LENGTH_SHORT).show();
+        // Fetch passenger details from Firebase
+        DatabaseReference passengerRef = FirebaseUtil.getDatabase().getReference("users").child(currentUser.getUid());
+        passengerRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    User passenger = snapshot.getValue(User.class);
+                    if (passenger != null) {
+                        // Create a new ride request
+                        String requestId = UUID.randomUUID().toString();
+                        String timestamp = String.valueOf(System.currentTimeMillis());
+                        
+                        RideRequest rideRequest = new RideRequest(
+                                requestId,
+                                ride.getRideId(),
+                                currentUser.getUid(),
+                                ride.getDriverId(),
+                                "pending", // status
+                                ride.getDriverName(),
+                                ride.getDriverRegNo(),
+                                "", // driverMobile - will be populated when request is accepted
+                                passenger.getName() != null ? passenger.getName() : "Unknown Passenger",
+                                passenger.getMobile() != null ? passenger.getMobile() : "",
+                                passenger.getRegNo() != null ? passenger.getRegNo() : "",
+                                ride.getSource(),
+                                ride.getDestination(),
+                                ride.getDate(),
+                                ride.getTime()
+                        );
+                        
+                        // Save to Firebase
+                        DatabaseReference requestsRef = FirebaseUtil.getDatabase().getReference("ride_requests");
+                        requestsRef.child(requestId).setValue(rideRequest)
+                                .addOnCompleteListener(task -> {
+                                    if (task.isSuccessful()) {
+                                        Toast.makeText(RideSearchActivity.this, "Ride request sent successfully", Toast.LENGTH_SHORT).show();
+                                    } else {
+                                        Toast.makeText(RideSearchActivity.this, "Failed to send ride request: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                                    }
+                                });
                     } else {
-                        Toast.makeText(RideSearchActivity.this, "Failed to send ride request: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(RideSearchActivity.this, "Failed to load passenger information", Toast.LENGTH_SHORT).show();
                     }
-                });
+                } else {
+                    Toast.makeText(RideSearchActivity.this, "Passenger profile not found", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError error) {
+                Toast.makeText(RideSearchActivity.this, "Failed to load passenger information: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }

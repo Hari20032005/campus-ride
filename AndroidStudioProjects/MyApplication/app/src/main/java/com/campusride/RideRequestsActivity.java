@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.campusride.models.RideRequest;
+import com.campusride.models.User;
 import com.campusride.utils.FirebaseUtil;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -102,23 +103,68 @@ public class RideRequestsActivity extends AppCompatActivity {
     }
     
     private void updateRequestStatus(RideRequest request, String status) {
-        request.setStatus(status);
-        DatabaseReference requestsRef = FirebaseUtil.getDatabase().getReference("ride_requests");
-        requestsRef.child(request.getRequestId()).setValue(request)
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        Toast.makeText(RideRequestsActivity.this, 
-                            "Request " + status, Toast.LENGTH_SHORT).show();
-                        // Remove the request from the list if it's been accepted or rejected
-                        if (!"pending".equals(status)) {
-                            pendingRequests.remove(request);
-                            requestAdapter.updateRequests(pendingRequests);
+        if ("accepted".equals(status)) {
+            // When accepting a request, fetch the driver's mobile number and update the request
+            FirebaseUser currentUser = FirebaseUtil.getAuth().getCurrentUser();
+            if (currentUser != null) {
+                DatabaseReference driverRef = FirebaseUtil.getDatabase().getReference("users").child(currentUser.getUid());
+                driverRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot snapshot) {
+                        if (snapshot.exists()) {
+                            User driver = snapshot.getValue(User.class);
+                            if (driver != null) {
+                                // Update the request with driver's mobile number
+                                request.setDriverMobile(driver.getMobile() != null ? driver.getMobile() : "");
+                                request.setStatus(status);
+                                
+                                DatabaseReference requestsRef = FirebaseUtil.getDatabase().getReference("ride_requests");
+                                requestsRef.child(request.getRequestId()).setValue(request)
+                                        .addOnCompleteListener(task -> {
+                                            if (task.isSuccessful()) {
+                                                Toast.makeText(RideRequestsActivity.this, 
+                                                    "Request accepted. Passenger will be notified.", Toast.LENGTH_SHORT).show();
+                                                // Remove the request from the list
+                                                pendingRequests.remove(request);
+                                                requestAdapter.updateRequests(pendingRequests);
+                                            } else {
+                                                Toast.makeText(RideRequestsActivity.this, 
+                                                    "Failed to update request: " + task.getException().getMessage(), 
+                                                    Toast.LENGTH_SHORT).show();
+                                            }
+                                        });
+                            }
                         }
-                    } else {
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError error) {
                         Toast.makeText(RideRequestsActivity.this, 
-                            "Failed to update request: " + task.getException().getMessage(), 
+                            "Failed to load driver information: " + error.getMessage(), 
                             Toast.LENGTH_SHORT).show();
                     }
                 });
+            }
+        } else {
+            // For rejected requests, just update the status
+            request.setStatus(status);
+            DatabaseReference requestsRef = FirebaseUtil.getDatabase().getReference("ride_requests");
+            requestsRef.child(request.getRequestId()).setValue(request)
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            Toast.makeText(RideRequestsActivity.this, 
+                                "Request " + status, Toast.LENGTH_SHORT).show();
+                            // Remove the request from the list if it's been accepted or rejected
+                            if (!"pending".equals(status)) {
+                                pendingRequests.remove(request);
+                                requestAdapter.updateRequests(pendingRequests);
+                            }
+                        } else {
+                            Toast.makeText(RideRequestsActivity.this, 
+                                "Failed to update request: " + task.getException().getMessage(), 
+                                Toast.LENGTH_SHORT).show();
+                        }
+                    });
+        }
     }
 }
