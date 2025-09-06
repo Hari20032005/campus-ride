@@ -8,6 +8,19 @@
     <string name="college_email_required">Please use your college email (@vitstudent.ac.in)</string>
     <string name="invalid_credentials">Invalid email or password</string>
     
+    <!-- OTP Strings -->
+    <string name="otp_code">Enter OTP Code</string>
+    <string name="send_otp">Send OTP</string>
+    <string name="verify_otp">Verify OTP</string>
+    <string name="resend_otp">Didn\'t receive OTP? Resend</string>
+    <string name="otp_sent">OTP sent to your email</string>
+    <string name="otp_verified">OTP verified successfully</string>
+    <string name="invalid_otp">Invalid OTP. Please try again</string>
+    <string name="otp_expired">OTP expired. Please request a new one</string>
+    <string name="check_email_spam">Check your email (and spam folder)</string>
+    <string name="email_delivery_time">Email may take 1-2 minutes to arrive</string>
+    <string name="sending_email">Sending email...</string>
+    
     <!-- Home Dashboard Strings -->
     <string name="post_ride">Post a Ride</string>
     <string name="search_ride">Search Ride</string>

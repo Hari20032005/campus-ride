@@ -34,34 +34,49 @@
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/otpLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="24dp"
-        app:passwordToggleEnabled="true"
+        android:visibility="gone"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
 
         <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/passwordEditText"
+            android:id="@+id/otpEditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/password"
-            android:inputType="textPassword" />
+            android:hint="@string/otp_code"
+            android:inputType="number"
+            android:maxLength="6" />
 
     </com.google.android.material.textfield.TextInputLayout>
 
     <Button
-        android:id="@+id/loginButton"
+        android:id="@+id/sendOtpButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/login"
+        android:text="@string/send_otp"
         android:layout_marginBottom="16dp"
         style="@style/Widget.MaterialComponents.Button" />
 
     <Button
-        android:id="@+id/registerButton"
+        android:id="@+id/verifyOtpButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/register"
-        style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+        android:text="@string/verify_otp"
+        android:layout_marginBottom="16dp"
+        android:visibility="gone"
+        style="@style/Widget.MaterialComponents.Button" />
+
+    <TextView
+        android:id="@+id/resendOtpText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/resend_otp"
+        android:textColor="@color/purple_500"
+        android:visibility="gone"
+        android:clickable="true"
+        android:focusable="true" />
+
 
 </LinearLayout>
