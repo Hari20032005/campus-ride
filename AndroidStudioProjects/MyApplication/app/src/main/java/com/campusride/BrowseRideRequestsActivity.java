@@ -2,7 +2,11 @@ package com.campusride;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
@@ -28,7 +32,10 @@ public class BrowseRideRequestsActivity extends AppCompatActivity {
     
     private RecyclerView rideRequestsRecyclerView;
     private BrowseRideRequestsAdapter rideRequestAdapter;
-    private List<PassengerRideRequest> pendingRequests;
+    private List<PassengerRideRequest> allRequests;
+    private List<PassengerRideRequest> filteredRequests;
+    private EditText destinationFilterEditText, timeFilterEditText;
+    private Button searchButton, clearFiltersButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,16 +44,22 @@ public class BrowseRideRequestsActivity extends AppCompatActivity {
 
         initViews();
         setupRecyclerView();
-        loadPendingRideRequests();
+        setClickListeners();
+        loadAllRideRequests();
     }
 
     private void initViews() {
         rideRequestsRecyclerView = findViewById(R.id.rideRequestsRecyclerView);
+        destinationFilterEditText = findViewById(R.id.destinationFilterEditText);
+        timeFilterEditText = findViewById(R.id.timeFilterEditText);
+        searchButton = findViewById(R.id.searchButton);
+        clearFiltersButton = findViewById(R.id.clearFiltersButton);
     }
 
     private void setupRecyclerView() {
-        pendingRequests = new ArrayList<>();
-        rideRequestAdapter = new BrowseRideRequestsAdapter(pendingRequests, new BrowseRideRequestsAdapter.OnRequestActionListener() {
+        allRequests = new ArrayList<>();
+        filteredRequests = new ArrayList<>();
+        rideRequestAdapter = new BrowseRideRequestsAdapter(filteredRequests, new BrowseRideRequestsAdapter.OnRequestActionListener() {
             @Override
             public void onAcceptRequest(PassengerRideRequest request) {
                 showAcceptConfirmation(request);
@@ -61,9 +74,46 @@ public class BrowseRideRequestsActivity extends AppCompatActivity {
         rideRequestsRecyclerView.setAdapter(rideRequestAdapter);
     }
     
-    private void loadPendingRideRequests() {
+    private void setClickListeners() {
+        searchButton.setOnClickListener(v -> filterRideRequests());
+        
+        clearFiltersButton.setOnClickListener(v -> {
+            destinationFilterEditText.setText("");
+            timeFilterEditText.setText("");
+            showAllRideRequests();
+        });
+        
+        // Add text watcher for real-time filtering
+        destinationFilterEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                filterRideRequests();
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
+        
+        timeFilterEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                filterRideRequests();
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
+    }
+    
+    private void loadAllRideRequests() {
         DatabaseReference requestsRef = FirebaseUtil.getDatabase().getReference("passenger_ride_requests");
-        Log.d(TAG, "Attempting to load pending ride requests");
+        Log.d(TAG, "Attempting to load all ride requests");
         Log.d(TAG, "Database reference: " + requestsRef.toString());
         
         // Listen for all requests, then filter on client side
@@ -71,7 +121,7 @@ public class BrowseRideRequestsActivity extends AppCompatActivity {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 Log.d(TAG, "Data loaded successfully, count: " + dataSnapshot.getChildrenCount());
-                pendingRequests.clear();
+                allRequests.clear();
                 for (DataSnapshot requestSnapshot : dataSnapshot.getChildren()) {
                     PassengerRideRequest request = requestSnapshot.getValue(PassengerRideRequest.class);
                     if (request != null) {
@@ -80,21 +130,24 @@ public class BrowseRideRequestsActivity extends AppCompatActivity {
                         if (currentUser != null) {
                             if ("pending".equals(request.getStatus())) {
                                 // Show all pending requests
-                                pendingRequests.add(request);
+                                allRequests.add(request);
                                 Log.d(TAG, "Added pending request: " + request.getRequestId() + " from " + request.getPassengerName());
                             } else if ("accepted".equals(request.getStatus()) && 
                                       currentUser.getUid().equals(request.getDriverId())) {
                                 // Show requests accepted by current driver
-                                pendingRequests.add(request);
+                                allRequests.add(request);
                                 Log.d(TAG, "Added accepted request (by current driver): " + request.getRequestId());
                             }
                         }
                     }
                 }
                 // Sort by creation time (newest first)
-                pendingRequests.sort((r1, r2) -> Long.compare(r2.getCreatedAt(), r1.getCreatedAt()));
-                rideRequestAdapter.updateRequests(pendingRequests);
-                Log.d(TAG, "Loaded " + pendingRequests.size() + " ride requests (pending + accepted by current driver)");
+                allRequests.sort((r1, r2) -> Long.compare(r2.getCreatedAt(), r1.getCreatedAt()));
+                
+                // Initially show all requests
+                showAllRideRequests();
+                
+                Log.d(TAG, "Loaded " + allRequests.size() + " ride requests (pending + accepted by current driver)");
             }
 
             @Override
@@ -108,6 +161,50 @@ public class BrowseRideRequestsActivity extends AppCompatActivity {
                     Toast.LENGTH_LONG).show();
             }
         });
+    }
+    
+    private void showAllRideRequests() {
+        filteredRequests.clear();
+        filteredRequests.addAll(allRequests);
+        rideRequestAdapter.updateRequests(filteredRequests);
+    }
+    
+    private void filterRideRequests() {
+        String destinationFilter = destinationFilterEditText.getText().toString().trim().toLowerCase();
+        String timeFilter = timeFilterEditText.getText().toString().trim().toLowerCase();
+        
+        filteredRequests.clear();
+        
+        // Filter requests based on destination and time
+        for (PassengerRideRequest request : allRequests) {
+            boolean destinationMatch = destinationFilter.isEmpty() || 
+                request.getDestination().toLowerCase().contains(destinationFilter);
+            boolean timeMatch = timeFilter.isEmpty() || 
+                request.getTime().toLowerCase().contains(timeFilter);
+            
+            if (destinationMatch && timeMatch) {
+                filteredRequests.add(request);
+            }
+        }
+        
+        // Sort filtered requests - put matching destination requests first
+        if (!destinationFilter.isEmpty()) {
+            filteredRequests.sort((r1, r2) -> {
+                boolean r1Matches = r1.getDestination().toLowerCase().contains(destinationFilter);
+                boolean r2Matches = r2.getDestination().toLowerCase().contains(destinationFilter);
+                
+                if (r1Matches && !r2Matches) return -1;
+                if (!r1Matches && r2Matches) return 1;
+                return 0;
+            });
+        }
+        
+        rideRequestAdapter.updateRequests(filteredRequests);
+        Log.d(TAG, "Found " + filteredRequests.size() + " requests matching search criteria");
+        
+        if (filteredRequests.isEmpty()) {
+            Toast.makeText(this, "No ride requests found matching your criteria", Toast.LENGTH_SHORT).show();
+        }
     }
     
     private void showAcceptConfirmation(PassengerRideRequest request) {
@@ -139,8 +236,8 @@ public class BrowseRideRequestsActivity extends AppCompatActivity {
             // Request is already accepted by another driver
             Toast.makeText(this, "This ride request has already been accepted by another driver", Toast.LENGTH_SHORT).show();
             // Refresh the list to remove this request
-            pendingRequests.remove(request);
-            rideRequestAdapter.updateRequests(pendingRequests);
+            allRequests.remove(request);
+            filterRideRequests();
             return;
         }
         
@@ -168,13 +265,13 @@ public class BrowseRideRequestsActivity extends AppCompatActivity {
                                             "Ride request accepted successfully! Contact details shared with passenger.", Toast.LENGTH_LONG).show();
                                         
                                         // Update the request in the list to show "View Details" button
-                                        for (int i = 0; i < pendingRequests.size(); i++) {
-                                            if (pendingRequests.get(i).getRequestId().equals(request.getRequestId())) {
-                                                pendingRequests.set(i, request);
+                                        for (int i = 0; i < allRequests.size(); i++) {
+                                            if (allRequests.get(i).getRequestId().equals(request.getRequestId())) {
+                                                allRequests.set(i, request);
                                                 break;
                                             }
                                         }
-                                        rideRequestAdapter.updateRequests(pendingRequests);
+                                        filterRideRequests();
                                     } else {
                                         Toast.makeText(BrowseRideRequestsActivity.this, 
                                             "Failed to accept ride request: " + task.getException().getMessage(), 
