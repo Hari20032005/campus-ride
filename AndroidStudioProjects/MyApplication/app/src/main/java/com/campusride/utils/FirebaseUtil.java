@@ -14,6 +14,7 @@ public class FirebaseUtil {
     private static boolean isInitialized = false;
 
     public static synchronized void initialize(Context context) {
+        Log.d(TAG, "initialize() called");
         if (!isInitialized) {
             try {
                 if (FirebaseApp.getApps(context).isEmpty()) {
@@ -32,6 +33,7 @@ public class FirebaseUtil {
     }
 
     public static FirebaseAuth getAuth() {
+        Log.d(TAG, "getAuth() called");
         if (mAuth == null) {
             try {
                 mAuth = FirebaseAuth.getInstance();
@@ -44,14 +46,38 @@ public class FirebaseUtil {
     }
 
     public static FirebaseDatabase getDatabase() {
-        if (mDatabase == null) {
-            try {
+        Log.d(TAG, "getDatabase() called");
+        try {
+            // Always try to get a fresh instance to handle reconnection after logout
+            if (mDatabase == null) {
+                Log.d(TAG, "Creating new FirebaseDatabase instance");
                 mDatabase = FirebaseDatabase.getInstance();
                 Log.d(TAG, "FirebaseDatabase instance created successfully");
-            } catch (Exception e) {
-                Log.e(TAG, "Error creating FirebaseDatabase instance", e);
+            } else {
+                Log.d(TAG, "Using existing FirebaseDatabase instance");
+            }
+            return mDatabase;
+        } catch (Exception e) {
+            Log.e(TAG, "Error creating FirebaseDatabase instance", e);
+            // Try to create a new instance in case of failure
+            try {
+                Log.d(TAG, "Attempting to recreate FirebaseDatabase instance");
+                mDatabase = FirebaseDatabase.getInstance();
+                Log.d(TAG, "FirebaseDatabase instance recreated successfully");
+                return mDatabase;
+            } catch (Exception recreateException) {
+                Log.e(TAG, "Error recreating FirebaseDatabase instance", recreateException);
+                return null;
             }
         }
-        return mDatabase;
+    }
+    
+    // Method to reset Firebase instances after logout
+    public static void resetFirebaseInstances() {
+        Log.d(TAG, "Resetting Firebase instances");
+        mAuth = null;
+        mDatabase = null;
+        isInitialized = false;
+        Log.d(TAG, "Firebase instances reset completed");
     }
 }

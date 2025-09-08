@@ -18,6 +18,9 @@ import com.campusride.utils.FirebaseUtil;
 import com.campusride.utils.OTPService;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.ValueEventListener;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
@@ -40,10 +43,12 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
 
         // Initialize Firebase
+        Log.d("LoginActivity", "Initializing Firebase");
         FirebaseUtil.initialize(this);
         android.util.Log.d("LoginActivity", "Firebase initialized");
         
         // Initialize OTP Service
+        Log.d("LoginActivity", "Initializing OTP Service");
         otpService = new OTPService(this);
         android.util.Log.d("LoginActivity", "OTP Service initialized");
         
@@ -58,6 +63,39 @@ public class LoginActivity extends AppCompatActivity {
 
         initViews();
         setClickListeners();
+        
+        // Test Firebase Database connection
+        testFirebaseConnection();
+    }
+    
+    private void testFirebaseConnection() {
+        try {
+            Log.d("LoginActivity", "Testing Firebase Database connection");
+            if (FirebaseUtil.getDatabase() != null) {
+                Log.d("LoginActivity", "Firebase Database connection is available");
+                // Test actual database connectivity
+                FirebaseUtil.getDatabase().getReference(".info/connected").addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        boolean connected = snapshot.getValue(Boolean.class);
+                        if (connected) {
+                            Log.d("LoginActivity", "✅ Firebase Database is connected");
+                        } else {
+                            Log.w("LoginActivity", "⚠️ Firebase Database is disconnected");
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        Log.e("LoginActivity", "Failed to check database connection", error.toException());
+                    }
+                });
+            } else {
+                Log.e("LoginActivity", "Firebase Database connection is not available");
+            }
+        } catch (Exception e) {
+            Log.e("LoginActivity", "Error testing Firebase Database connection", e);
+        }
     }
 
     private void initViews() {
