@@ -50,6 +50,8 @@
         <activity android:name=".ProfileActivity" />
         <activity android:name=".PassengerRideRequestsActivity" />
         <activity android:name=".FirebaseTestActivity" />
+        <activity android:name=".DriverDashboardActivity" />
+        <activity android:name=".MyAcceptedRidesActivity" />
     </application>
 
 </manifest>

@@ -70,6 +70,15 @@ public class HomeActivity extends BaseActivity {
         myRideRequestsCard = findViewById(R.id.myRideRequestsCard);
         profileCard = findViewById(R.id.profileCard);
         recentRidesRecyclerView = findViewById(R.id.recentRidesRecyclerView);
+        MaterialCardView driverCard = findViewById(R.id.driverCard);
+        
+        // Set click listener for driver card
+        driverCard.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(HomeActivity.this, DriverDashboardActivity.class));
+            }
+        });
     }
 
     private void setClickListeners() {
