@@ -5,41 +5,99 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp"
+    android:padding="@dimen/spacing_medium"
+    android:background="@color/background"
     tools:context=".HomeActivity">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/app_name"
-        android:textSize="24sp"
+        android:textSize="@dimen/text_size_display"
         android:textStyle="bold"
-        android:layout_marginBottom="24dp"
-        android:textColor="@color/purple_500" />
+        android:layout_marginTop="@dimen/spacing_large"
+        android:layout_marginBottom="@dimen/spacing_large"
+        android:textColor="@color/primary" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginBottom="24dp">
+        android:layout_marginBottom="@dimen/spacing_large">
 
-        <Button
-            android:id="@+id/postRideButton"
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/postRideCard"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Post Ride Request"
-            android:layout_marginEnd="8dp"
-            style="@style/Widget.MaterialComponents.Button" />
+            android:layout_marginEnd="@dimen/spacing_small"
+            app:cardElevation="@dimen/card_elevation"
+            app:cardCornerRadius="@dimen/card_corner_radius">
 
-        <Button
-            android:id="@+id/searchRideButton"
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="@dimen/spacing_medium"
+                android:gravity="center">
+
+                <ImageView
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_marginBottom="@dimen/spacing_small"
+                    android:src="@drawable/ic_post_ride"
+                    android:contentDescription="@string/post_ride"
+                    app:tint="@color/primary" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/post_ride"
+                    android:textSize="@dimen/text_size_subtitle"
+                    android:textStyle="bold"
+                    android:textAlignment="center"
+                    android:textColor="@color/on_surface" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/searchRideCard"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Browse Rides"
-            android:layout_marginStart="8dp"
-            style="@style/Widget.MaterialComponents.Button" />
+            android:layout_marginStart="@dimen/spacing_small"
+            app:cardElevation="@dimen/card_elevation"
+            app:cardCornerRadius="@dimen/card_corner_radius">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="@dimen/spacing_medium"
+                android:gravity="center">
+
+                <ImageView
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_marginBottom="@dimen/spacing_small"
+                    android:src="@drawable/ic_search_ride"
+                    android:contentDescription="@string/browse_rides"
+                    app:tint="@color/primary" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/browse_rides"
+                    android:textSize="@dimen/text_size_subtitle"
+                    android:textStyle="bold"
+                    android:textAlignment="center"
+                    android:textColor="@color/on_surface" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
 
     </LinearLayout>
 
@@ -47,25 +105,81 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginBottom="24dp">
+        android:layout_marginBottom="@dimen/spacing_large">
 
-        <Button
-            android:id="@+id/myRideRequestsButton"
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/myRideRequestsCard"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="@string/my_ride_requests"
-            android:layout_marginEnd="8dp"
-            style="@style/Widget.MaterialComponents.Button" />
+            android:layout_marginEnd="@dimen/spacing_small"
+            app:cardElevation="@dimen/card_elevation"
+            app:cardCornerRadius="@dimen/card_corner_radius">
 
-        <Button
-            android:id="@+id/profileButton"
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="@dimen/spacing_medium"
+                android:gravity="center">
+
+                <ImageView
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_marginBottom="@dimen/spacing_small"
+                    android:src="@drawable/ic_my_requests"
+                    android:contentDescription="@string/my_ride_requests"
+                    app:tint="@color/primary" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/my_ride_requests"
+                    android:textSize="@dimen/text_size_subtitle"
+                    android:textStyle="bold"
+                    android:textAlignment="center"
+                    android:textColor="@color/on_surface" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/profileCard"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="@string/profile"
-            android:layout_marginStart="8dp"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+            android:layout_marginStart="@dimen/spacing_small"
+            app:cardElevation="@dimen/card_elevation"
+            app:cardCornerRadius="@dimen/card_corner_radius">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="@dimen/spacing_medium"
+                android:gravity="center">
+
+                <ImageView
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_marginBottom="@dimen/spacing_small"
+                    android:src="@drawable/ic_profile"
+                    android:contentDescription="@string/profile"
+                    app:tint="@color/primary" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/profile"
+                    android:textSize="@dimen/text_size_subtitle"
+                    android:textStyle="bold"
+                    android:textAlignment="center"
+                    android:textColor="@color/on_surface" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
 
     </LinearLayout>
 
@@ -73,9 +187,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/recent_rides"
-        android:textSize="18sp"
+        android:textSize="@dimen/text_size_title"
         android:textStyle="bold"
-        android:layout_marginBottom="16dp" />
+        android:layout_marginBottom="@dimen/spacing_medium"
+        android:textColor="@color/on_background" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recentRidesRecyclerView"

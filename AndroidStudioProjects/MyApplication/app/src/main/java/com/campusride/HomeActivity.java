@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.Toast;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -12,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.campusride.models.PassengerRideRequest;
 import com.campusride.utils.FirebaseUtil;
+import com.google.android.material.card.MaterialCardView;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -25,9 +25,9 @@ public class HomeActivity extends BaseActivity {
 
     private static final String TAG = "HomeActivity";
     
-    private Button postRideRequestButton, browseRidesButton, myRideRequestsButton, profileButton;
+    private MaterialCardView postRideCard, searchRideCard, myRideRequestsCard, profileCard;
     private RecyclerView recentRidesRecyclerView;
-    private MyRideRequestsAdapter recentRidesAdapter;
+    private RecentRidesAdapter recentRidesAdapter;
     private List<PassengerRideRequest> recentRidesList;
     
     private ValueEventListener myRidesListener;
@@ -65,36 +65,36 @@ public class HomeActivity extends BaseActivity {
     }
 
     private void initViews() {
-        postRideRequestButton = findViewById(R.id.postRideButton);
-        browseRidesButton = findViewById(R.id.searchRideButton);
-        myRideRequestsButton = findViewById(R.id.myRideRequestsButton);
-        profileButton = findViewById(R.id.profileButton);
+        postRideCard = findViewById(R.id.postRideCard);
+        searchRideCard = findViewById(R.id.searchRideCard);
+        myRideRequestsCard = findViewById(R.id.myRideRequestsCard);
+        profileCard = findViewById(R.id.profileCard);
         recentRidesRecyclerView = findViewById(R.id.recentRidesRecyclerView);
     }
 
     private void setClickListeners() {
-        postRideRequestButton.setOnClickListener(new View.OnClickListener() {
+        postRideCard.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 startActivity(new Intent(HomeActivity.this, PostRideRequestActivity.class));
             }
         });
 
-        browseRidesButton.setOnClickListener(new View.OnClickListener() {
+        searchRideCard.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 startActivity(new Intent(HomeActivity.this, BrowseRideRequestsActivity.class));
             }
         });
 
-        myRideRequestsButton.setOnClickListener(new View.OnClickListener() {
+        myRideRequestsCard.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 startActivity(new Intent(HomeActivity.this, MyRideRequestsActivity.class));
             }
         });
 
-        profileButton.setOnClickListener(new View.OnClickListener() {
+        profileCard.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 startActivity(new Intent(HomeActivity.this, ProfileActivity.class));
@@ -104,7 +104,7 @@ public class HomeActivity extends BaseActivity {
 
     private void setupRecyclerView() {
         recentRidesList = new ArrayList<>();
-        recentRidesAdapter = new MyRideRequestsAdapter(recentRidesList);
+        recentRidesAdapter = new RecentRidesAdapter(recentRidesList);
         recentRidesRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         recentRidesRecyclerView.setAdapter(recentRidesAdapter);
     }

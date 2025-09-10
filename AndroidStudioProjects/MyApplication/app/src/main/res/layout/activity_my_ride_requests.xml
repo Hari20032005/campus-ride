@@ -5,17 +5,19 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp"
+    android:padding="@dimen/spacing_medium"
+    android:background="@color/background"
     tools:context=".MyRideRequestsActivity">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="My Ride Requests"
-        android:textSize="24sp"
+        android:text="@string/my_ride_requests"
+        android:textSize="@dimen/text_size_display"
         android:textStyle="bold"
-        android:layout_marginBottom="24dp"
-        android:textColor="@color/purple_500" />
+        android:layout_marginTop="@dimen/spacing_large"
+        android:layout_marginBottom="@dimen/spacing_large"
+        android:textColor="@color/primary" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/myRequestsRecyclerView"

@@ -52,15 +52,6 @@ public class LoginActivity extends AppCompatActivity {
         otpService = new OTPService(this);
         android.util.Log.d("LoginActivity", "OTP Service initialized");
         
-        // Check if user is already logged in
-        FirebaseUser currentUser = FirebaseUtil.getAuth().getCurrentUser();
-        if (currentUser != null) {
-            Log.d("LoginActivity", "User is already logged in");
-            startActivity(new Intent(LoginActivity.this, HomeActivity.class));
-            finish();
-            return;
-        }
-
         initViews();
         setClickListeners();
         

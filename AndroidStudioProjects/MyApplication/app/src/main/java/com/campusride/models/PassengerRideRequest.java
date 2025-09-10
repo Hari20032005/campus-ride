@@ -1,6 +1,8 @@
 package com.campusride.models;
 
-public class PassengerRideRequest {
+import java.io.Serializable;
+
+public class PassengerRideRequest implements Serializable {
     private String requestId;
     private String passengerId;
     private String passengerName;

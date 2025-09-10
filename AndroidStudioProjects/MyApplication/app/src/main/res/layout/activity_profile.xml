@@ -5,104 +5,226 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp"
+    android:padding="@dimen/spacing_medium"
+    android:background="@color/background"
     tools:context=".ProfileActivity">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/profile"
-        android:textSize="24sp"
+        android:textSize="@dimen/text_size_display"
         android:textStyle="bold"
-        android:layout_marginBottom="24dp"
-        android:textColor="@color/purple_500" />
+        android:layout_marginTop="@dimen/spacing_large"
+        android:layout_marginBottom="@dimen/spacing_large"
+        android:textColor="@color/primary" />
 
     <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="24dp"
-        app:cardElevation="4dp"
-        app:cardCornerRadius="8dp">
+        android:layout_marginBottom="@dimen/spacing_large"
+        app:cardElevation="@dimen/card_elevation"
+        app:cardCornerRadius="@dimen/card_corner_radius">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="@dimen/spacing_medium">
 
-            <TextView
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/student_name"
-                android:textStyle="bold"
-                android:layout_marginBottom="8dp" />
+                android:orientation="horizontal"
+                android:layout_marginBottom="@dimen/spacing_medium">
 
-            <TextView
-                android:id="@+id/nameTextView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Student Name"
-                android:textSize="18sp"
-                android:layout_marginBottom="16dp" />
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginEnd="@dimen/spacing_medium"
+                    android:src="@drawable/ic_profile"
+                    android:contentDescription="@string/student_name"
+                    app:tint="@color/primary" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/email"
-                android:textStyle="bold"
-                android:layout_marginBottom="8dp" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/emailTextView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="user@example.com"
-                android:textSize="18sp"
-                android:layout_marginBottom="16dp" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/student_name"
+                        android:textStyle="bold"
+                        android:textSize="@dimen/text_size_body"
+                        android:textColor="@color/on_surface" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Mobile Number"
-                android:textStyle="bold"
-                android:layout_marginBottom="8dp" />
+                    <TextView
+                        android:id="@+id/nameTextView"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Student Name"
+                        android:textSize="@dimen/text_size_subtitle"
+                        android:textColor="@color/on_surface" />
 
-            <TextView
-                android:id="@+id/mobileTextView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Mobile Number"
-                android:textSize="18sp"
-                android:layout_marginBottom="16dp" />
+                </LinearLayout>
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Registration Number"
-                android:textStyle="bold"
-                android:layout_marginBottom="8dp" />
+            </LinearLayout>
 
-            <TextView
-                android:id="@+id/regNoTextView"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Registration Number"
-                android:textSize="18sp"
-                android:layout_marginBottom="16dp" />
+                android:orientation="horizontal"
+                android:layout_marginBottom="@dimen/spacing_medium">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/rides_count"
-                android:textStyle="bold"
-                android:layout_marginBottom="8dp" />
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginEnd="@dimen/spacing_medium"
+                    android:src="@drawable/ic_email"
+                    android:contentDescription="@string/email"
+                    app:tint="@color/primary" />
 
-            <TextView
-                android:id="@+id/ridesCountTextView"
-                android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/email"
+                        android:textStyle="bold"
+                        android:textSize="@dimen/text_size_body"
+                        android:textColor="@color/on_surface" />
+
+                    <TextView
+                        android:id="@+id/emailTextView"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="user@example.com"
+                        android:textSize="@dimen/text_size_subtitle"
+                        android:textColor="@color/on_surface" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="0"
-                android:textSize="18sp" />
+                android:orientation="horizontal"
+                android:layout_marginBottom="@dimen/spacing_medium">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginEnd="@dimen/spacing_medium"
+                    android:src="@drawable/ic_phone"
+                    android:contentDescription="Mobile Number"
+                    app:tint="@color/primary" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Mobile Number"
+                        android:textStyle="bold"
+                        android:textSize="@dimen/text_size_body"
+                        android:textColor="@color/on_surface" />
+
+                    <TextView
+                        android:id="@+id/mobileTextView"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Mobile Number"
+                        android:textSize="@dimen/text_size_subtitle"
+                        android:textColor="@color/on_surface" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="@dimen/spacing_medium">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginEnd="@dimen/spacing_medium"
+                    android:src="@drawable/ic_id"
+                    android:contentDescription="Registration Number"
+                    app:tint="@color/primary" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Registration Number"
+                        android:textStyle="bold"
+                        android:textSize="@dimen/text_size_body"
+                        android:textColor="@color/on_surface" />
+
+                    <TextView
+                        android:id="@+id/regNoTextView"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Registration Number"
+                        android:textSize="@dimen/text_size_subtitle"
+                        android:textColor="@color/on_surface" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginEnd="@dimen/spacing_medium"
+                    android:src="@drawable/ic_ride"
+                    android:contentDescription="@string/rides_count"
+                    app:tint="@color/primary" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/rides_count"
+                        android:textStyle="bold"
+                        android:textSize="@dimen/text_size_body"
+                        android:textColor="@color/on_surface" />
+
+                    <TextView
+                        android:id="@+id/ridesCountTextView"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0"
+                        android:textSize="@dimen/text_size_subtitle"
+                        android:textColor="@color/on_surface" />
+
+                </LinearLayout>
+
+            </LinearLayout>
 
         </LinearLayout>
 
@@ -111,8 +233,8 @@
     <Button
         android:id="@+id/logoutButton"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="@dimen/button_height"
         android:text="@string/logout"
-        style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+        style="@style/OutlinedButtonStyle" />
 
 </LinearLayout>
